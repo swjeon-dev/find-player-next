@@ -5,8 +5,8 @@ import {
   fetchFilteringPlayersByName,
   queryKeysMain,
   type FilteringPlayersByNameRaw,
-  type IFirebasePlayer,
 } from '@/shared'
+import type { IFirebasePlayer } from '@common/model'
 
 const MIN_QUERY_LEN = 2
 const LIMIT = 20

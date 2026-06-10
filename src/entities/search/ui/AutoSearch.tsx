@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as S from './AutoSearch.style'
-import type { IFirebasePlayer } from '@/shared'
+import type { IFirebasePlayer } from '@common/model'
 
 interface IAutoSearchProps {
   searchingPlayers: IFirebasePlayer[]

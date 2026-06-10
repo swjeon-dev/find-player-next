@@ -1,7 +1,7 @@
 import { atom } from 'recoil'
 import { recoilPersist } from 'recoil-persist'
 
-import type { IFirebasePlayer } from '@/shared'
+import type { IFirebasePlayer } from '@common/model'
 
 const { persistAtom: persistQuizAtom } = recoilPersist({
   key: 'quizPlayer',

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchPlayer, queryKeysMain, type IFirebasePlayer } from '@/shared'
+import { fetchPlayer, queryKeysMain } from '@/shared'
+import type { IFirebasePlayer } from '@common/model'
 
 export default function useFetchingPlayerData({
   playerId,
