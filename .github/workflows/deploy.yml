@@ -1,0 +1,89 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    # deploy -> master (배포 브랜치 변경)
+    branches: [master]
+    # 테스트 브랜치
+    # branches: [feat/migrate-to-functions]
+    # 아래 경로만 변경된 push/merge일 때만 배포 (워크플로·README·functions 단독 변경 시 스킵)
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # 에디터 린트 오류 방지를 위해 따옴표 추가
+    env:
+      'VITE_FIREBASE_API_KEY': '${{ secrets.VITE_FIREBASE_API_KEY }}'
+      'VITE_FOOTBALL_API_KEY': '${{ secrets.VITE_FOOTBALL_API_KEY }}'
+      'VITE_PUBLIC_BASE': '/find-player-game/'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies & Sync Shared
+        run: |
+          # 1. 루트 의존성 설치
+          npm ci
+
+          # 2. shared 폴더가 저장소에 있을 때만 functions/src 로 복사
+          # (원격에 shared/ 가 없으면 cp 실패로 배포가 중단되므로 분기 처리)
+          if [ -d shared ]; then
+            rm -rf functions/src/shared
+            cp -r shared functions/src/shared
+            ls -R functions/src/shared
+          else
+            echo 'shared/ 가 없어 복사를 건너뜁니다. functions 빌드에 shared가 필요하면 해당 디렉터리를 커밋하세요.'
+          fi
+
+          # 3. functions 의존성 설치
+          cd functions && npm install
+
+      - name: Build project
+        run: |
+          npm run build
+          # functions 빌드 (경로 에러가 나도 중단되지 않게 처리하려면 || true 사용)
+          # cd functions && (npm run build || true)
+          cp dist/index.html dist/404.html
+          # 404.html 파일 생성. submission 페이지 이동 시 404 페이지로 이동하도록 설정
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    # 오직 master 브랜치에 push(merge 포함)되었을 때만 실제 배포 수행
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

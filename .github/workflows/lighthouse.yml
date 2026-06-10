@@ -1,0 +1,62 @@
+# Lighthouse CI + GitHub App (PR Checks에 점수·리포트 링크)
+# https://tech.kakaoent.com/front-end/2022/220602-lighthouse-with-github-actions/
+# 1) https://github.com/apps/lighthouse-ci 설치
+# 2) Repo secret: LHCI_GITHUB_APP_TOKEN
+# 3) master 대상 PR push → Checks 탭에서 확인
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_LHCI: 'true'
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FOOTBALL_API_KEY: ${{ secrets.VITE_FOOTBALL_API_KEY }}
+
+      - name: Verify Lighthouse GitHub App token
+        if: github.event_name == 'pull_request'
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        run: |
+          if [ -z "$LHCI_GITHUB_APP_TOKEN" ]; then
+            echo "::error::LHCI_GITHUB_APP_TOKEN secret이 없습니다."
+            echo "https://github.com/apps/lighthouse-ci 에서 앱 설치 후 토큰을 등록하세요."
+            exit 1
+          fi
+
+      - name: Run Lighthouse CI
+        run: npx lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.event.pull_request.head.sha || github.sha }}
+          LHCI_BUILD_CONTEXT__CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+      - name: Write Lighthouse job summary
+        if: always()
+        run: node scripts/lhci-github-summary.mjs

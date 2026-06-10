@@ -1,0 +1,29 @@
+{
+  "name": "functions",
+  "scripts": {
+    "prepare-common": "node scripts/prepare-common.js",
+    "prebuild": "npm run prepare-common",
+    "build": "npm run prepare-common && tsc -p tsconfig.build.json && node scripts/copy-common-to-lib.js && tsc-alias -p tsconfig.build.json",
+    "build:watch": "npm run prepare-common && tsc -p tsconfig.build.json --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.1",
+    "tsc-alias": "^1.8.17",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
