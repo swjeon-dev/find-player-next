@@ -51,7 +51,8 @@ const routes = [
   },
 ]
 
-const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'
+const basename =
+  process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, '') || '/'
 
 const router = createBrowserRouter(routes, {
   basename,

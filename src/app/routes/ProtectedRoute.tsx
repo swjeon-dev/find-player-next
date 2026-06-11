@@ -7,8 +7,7 @@ import { leagueInfoState } from '@/entities/league'
 function ProtectedRoute() {
   const leagueInfo = useRecoilValue(leagueInfoState)
 
-  // Vite는 VITE_* 를 `vite build` 시점에 번들에 넣습니다.
-  if (import.meta.env.VITE_LHCI === 'true') {
+  if (process.env.NEXT_PUBLIC_LHCI === 'true') {
     return <Outlet />
   }
 
