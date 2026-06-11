@@ -35,9 +35,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_LHCI: 'true'
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FOOTBALL_API_KEY: ${{ secrets.VITE_FOOTBALL_API_KEY }}
+          NEXT_PUBLIC_LHCI: 'true'
 
       - name: Verify Lighthouse GitHub App token
         if: github.event_name == 'pull_request'

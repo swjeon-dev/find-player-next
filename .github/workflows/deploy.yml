@@ -11,10 +11,9 @@ on:
     paths:
       - 'src/**'
       - 'common/**'
-      - 'index.html'
       - 'package.json'
       - 'package-lock.json'
-      - 'vite.config.js'
+      - 'next.config.ts'
       - 'tsconfig.json'
       - '.github/workflows/deploy.yml'
 
@@ -32,9 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     # 에디터 린트 오류 방지를 위해 따옴표 추가
     env:
-      'VITE_FIREBASE_API_KEY': ${{ secrets.VITE_FIREBASE_API_KEY }}
-      'VITE_FOOTBALL_API_KEY': ${{ secrets.VITE_FOOTBALL_API_KEY }}
-      'VITE_PUBLIC_BASE': '/find-player-game/'
+      NEXT_PUBLIC_BASE_PATH: '/find-player-game'
 
     steps:
       - name: Checkout
@@ -51,22 +48,19 @@ jobs:
         run: npm ci
 
       - name: Build project
-        run: |
-          npm run build
-          # functions 빌드 (경로 에러가 나도 중단되지 않게 처리하려면 || true 사용)
-          # cd functions && (npm run build || true)
-          cp dist/index.html dist/404.html
-          # 404.html 파일 생성. submission 페이지 이동 시 404 페이지로 이동하도록 설정
+        run: npm run build
+        # TODO(Next): GitHub Pages 정적 배포 시 next.config에 output: 'export', distDir 설정 필요
+        # Vercel 전환 후 이 워크플로는 제거 예정
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: out
 
   deploy:
     needs: build
     # 오직 master 브랜치에 push(merge 포함)되었을 때만 실제 배포 수행
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

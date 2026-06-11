@@ -1,14 +1,14 @@
 module.exports = {
   ci: {
     collect: {
-      // workflow에서 build 후 preview만 띄웁니다.
+      // workflow에서 build 후 next start로 서버를 띄웁니다.
       startServerCommand:
-        'npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
-      startServerReadyPattern: 'Local:',
+        'npm run start -- -p 3000 -H 127.0.0.1',
+      startServerReadyPattern: 'Ready',
       startServerReadyTimeout: 120000,
       url: [
-        'http://127.0.0.1:4173/find-player-game/',
-        'http://127.0.0.1:4173/find-player-game/submission',
+        'http://127.0.0.1:3000/',
+        'http://127.0.0.1:3000/submission',
       ],
       numberOfRuns: process.env.GITHUB_ACTIONS === 'true' ? 1 : 3,
       settings: {
