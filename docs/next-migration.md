@@ -25,10 +25,11 @@ npm i next@latest react@latest react-dom@latest
 ```
 
 - `.lighthouserc.js`: `next start` 기준으로 변경
-- `lighthouse.yml`: `NEXT_PUBLIC_LHCI` 사용
-- Vite env (`VITE_*`, `import.meta.env`) → `NEXT_PUBLIC_*`, `process.env` 로 전환 중
+- `lighthouse.yml`: `NEXT_PUBLIC_LHCI` 사용, Build step API 키 제거
+- Vite env (`VITE_*`, `import.meta.env`) → `NEXT_PUBLIC_*`, `process.env` ✅
+- GitHub Pages `deploy.yml` 비활성화 (`deploy.yml__`, Vercel 전환)
 - next 자체 번들러 사용으로 `vite`, `rollup-plugin-visualizer`, `@vitejs/plugin-react` 패키지 제거
-- `tsconfig.ts`에서 타입을 vite 타입에서 node로 변경해서 `@types/node`가 포함되도록 설정
+- `tsconfig.json`: Next plugin, `bundler` resolution, `.next/types` include, `next-env.d.ts`는 `.gitignore`
 
 ```text
 "types": ["node"] // <= vite/client
@@ -38,14 +39,23 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 
 ## 3. 남은 작업
 
+### 완료
+
+- [x] Vite env → `NEXT_PUBLIC_*` / `process.env` (앱, CI)
+- [x] `tsconfig.json` Next TypeScript 설정 (`vite/client` 제거, plugin·include)
+- [x] `vite.config.js` 제거
+- [x] 리그 엠블럼: `public/emblem` → `entities/league/assets` import (`StaticImageData`)
+- [x] GitHub Pages deploy 워크플로 비활성화 (Vercel 전환)
+
+### 미완료
+
 - [ ] App Router 진입점 (`app/layout.tsx`, `app/page.tsx`) 구성
 - [ ] `react-router-dom` → Next 파일 기반 라우팅 전환
-- [ ] public 에셋 경로 (`/emblem/pl.webp` 등) 수정
-- [ ] `tsconfig.json`에서 `vite/client` types 제거, Next types 추가
-- [x] `vite.config.js` 제거
 - [ ] `index.html` 제거
+- [ ] `LeagueSelectModal` `styled.img` → `next/image` 전환
 - [ ] `build:analyze`용 `@next/bundle-analyzer` 설정
-- [ ] GitHub Pages 배포 시 `output: 'export'` 또는 Vercel 배포로 전환
+- [ ] Vercel 배포 설정
+- [ ] README 이미지 `src/assets/imgs` → `docs/assets` 이동 (선택)
 
 ## 4. 환경 변수
 
@@ -65,14 +75,14 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 
 ### 변수별 정리
 
-| 변수                                   | 접두사            | 이유                                                   |
-| -------------------------------------- | ----------------- | ------------------------------------------------------ |
-| Functions (`FUNCTION_*`)               | ❌                | Cloud Functions = Node.js 환경                         |
-| `FOOTBALL_API_KEY`, `FIREBASE_API_KEY` | ❌                | 비밀키. 서버/CI/Functions 전용                         |
-| RTDB base URL                          | ✅ `NEXT_PUBLIC_` | 지금은 클라이언트 axios가 RTDB 직접 호출 (`client.ts`) |
-| `NEXT_PUBLIC_BASE_PATH`                | ✅                | GitHub Pages 서브패스 (`AppRouter.tsx`, `deploy.yml`)  |
-| `LHCI_GITHUB_APP_TOKEN`                | ❌                | CI 스크립트(`lhci`, `.mjs`) 전용                       |
-| `NEXT_PUBLIC_LHCI`                     | ✅                | Lighthouse CI용. 아래 참고                             |
+| 변수                                   | 접두사            | 이유                                                          |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------- |
+| Functions (`FUNCTION_*`)               | ❌                | Cloud Functions = Node.js 환경                                |
+| `FOOTBALL_API_KEY`, `FIREBASE_API_KEY` | ❌                | 비밀키. 서버/CI/Functions 전용                                |
+| RTDB base URL                          | ✅ `NEXT_PUBLIC_` | 지금은 클라이언트 axios가 RTDB 직접 호출 (`client.ts`)        |
+| `NEXT_PUBLIC_BASE_PATH`                | ✅                | 서브패스 배포 시 (`AppRouter.tsx`). Vercel 루트 배포면 미사용 |
+| `LHCI_GITHUB_APP_TOKEN`                | ❌                | CI 스크립트(`lhci`, `.mjs`) 전용                              |
+| `NEXT_PUBLIC_LHCI`                     | ✅                | Lighthouse CI용. 아래 참고                                    |
 
 > Firebase 호출을 전부 Server Component / Route Handler로 옮기면 Firebase 관련 env는 접두사 없이 서버 전용으로 통일 가능
 
