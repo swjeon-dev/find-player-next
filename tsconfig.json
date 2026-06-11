@@ -4,7 +4,7 @@
     "moduleResolution": "node", // 또는 "node"
     "module": "esnext",
     "target": "es2023",
-    "types": ["vite/client"],
+    "types": ["node"],
     "outDir": "dist",
     // Style Options
     // "noImplicitReturns": true,

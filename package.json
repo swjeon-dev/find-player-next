@@ -7,8 +7,9 @@
     "@tanstack/react-query": "^5.100.9",
     "@tanstack/react-query-persist-client": "^5.100.9",
     "axios": "^1.13.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.13.1",
     "recoil": "^0.7.6",
@@ -17,12 +18,12 @@
     "styled-reset": "^4.4.4"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:analyze": "ANALYZE=true npm run build",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "start": "next start",
+    "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
     "lhci": "npx lhci autorun",
-    "lhci:local": "VITE_LHCI=true npm run build && npm run lhci",
+    "lhci:local": "NEXT_PUBLIC_LHCI=true npm run build && npm run lhci",
     "sync:lighthouse-readme": "node scripts/sync-lighthouse-readme.mjs"
   },
   "browserslist": {
@@ -46,9 +47,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/styled-components": "^5.1.36",
-    "@vitejs/plugin-react": "^5.1.4",
-    "rollup-plugin-visualizer": "^6.0.11",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "typescript": "^5.9.3"
   }
 }
