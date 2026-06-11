@@ -49,13 +49,13 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 
 ### 미완료
 
-- [ ] App Router 진입점 (`app/layout.tsx`, `app/page.tsx`) 구성
-- [ ] `react-router-dom` → Next 파일 기반 라우팅 전환
-- [ ] `index.html` 제거
-- [ ] `LeagueSelectModal` `styled.img` → `next/image` 전환
-- [ ] `build:analyze`용 `@next/bundle-analyzer` 설정
-- [ ] Vercel 배포 설정
-- [ ] README 이미지 `src/assets/imgs` → `docs/assets` 이동 (선택)
+> 아직 Next 패키지는 설치됐지만, 앱은 Vite SPA 구조(`src/index.tsx`, `index.html`, `react-router-dom`)로 동작 중. FSD `src/app`은 Next `app/`과 별개.
+
+- [ ] **App Router 진입점** — 루트 `app/layout.tsx`, `app/page.tsx` 구성. `src/index.tsx`, `index.html` 제거
+- [ ] **라우팅 전환** — `react-router-dom` 제거, `src/pages`를 App Router 파일 라우트로 매핑 (`/`, `/submission`, 404). `ProtectedRoute`는 layout 또는 middleware로 대체
+- [ ] **앱 셸 이전** — Recoil·React Query·styled-components(theme) Provider를 `app/layout`으로 통합. `react-helmet-async` → Next `metadata` API
+- [ ] **배포** — Vercel 프로젝트 연동, `next.config` 정리
+- [ ] **Vite/SPA 잔여 정리** — `react-router-dom`, `react-helmet-async` 등 미사용 의존성·설정 제거
 
 ## 4. 환경 변수
 
