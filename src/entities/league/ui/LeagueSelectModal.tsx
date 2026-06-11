@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSetRecoilState } from 'recoil'
+import type { StaticImageData } from 'next/image'
 
 import { ROUTER_PATH } from '@/shared'
 import {
@@ -12,8 +13,7 @@ import {
   useDebouncedCallback,
 } from '@/shared'
 import { leagueInfoState } from '../model'
-
-import emblemImage from '/emblem/pl.webp'
+import { plImage } from '../assets'
 import * as S from './LeagueSelectModal.style'
 
 // temp
@@ -22,7 +22,7 @@ interface leagueListProps {
   id: number
   // season: number
   // webp image
-  emblemImage: string
+  emblem: StaticImageData
 }
 
 const leagueList: leagueListProps[] = [
@@ -30,7 +30,7 @@ const leagueList: leagueListProps[] = [
     name: 'pl',
     id: 39,
     // season: 2024, // 26년 기준 최신
-    emblemImage,
+    emblem: plImage,
   },
 ]
 
@@ -131,7 +131,8 @@ function LeagueSelectModalContainer({ children }: LeagueSelectModalProps) {
                     aria-label={`${league.name} 리그 선택 버튼`}
                   >
                     <S.Emblem
-                      src={league.emblemImage}
+                      // next/image 사용 시 '.src' 제거
+                      src={league.emblem.src}
                       width='70'
                       height='70'
                       alt={`${league.name} emblem image`}
