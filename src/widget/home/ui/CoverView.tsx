@@ -2,7 +2,7 @@
 
 import styled from 'styled-components'
 
-import { LeagueSelectModalTrigger } from '@/entities'
+import { LeagueSelectModalTrigger } from '@/entities/league'
 
 const CoverSection = styled.section`
   width: 100%;
@@ -22,7 +22,7 @@ const SectionHeading = styled.h2`
   border: 0;
 `
 
-function CoverPage() {
+function CoverView() {
   return (
     <CoverSection aria-labelledby='cover-game-heading'>
       <SectionHeading id='cover-game-heading'>Game Start</SectionHeading>
@@ -31,4 +31,4 @@ function CoverPage() {
   )
 }
 
-export default CoverPage
+export default CoverView
