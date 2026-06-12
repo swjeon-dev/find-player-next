@@ -61,7 +61,8 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 - [x] `ProtectedRoute` — `Outlet`/`Navigate` 제거, `children` + `useRouter` 패턴으로 전환
 - [x] `app/submission/layout.tsx` — submission 라우트에 리그 선택 가드 연결
 - [x] `app/layout.tsx` — `modal-root` portal 대상 추가
-- [x] `metadata` — root layout `title.template`, 홈·404 Server page 분리 (`CoverPage`, `NotFoundContent`)
+- [x] `metadata` — root layout `title.template`, 하위 page는 `title` 문자열만 지정
+- [x] `app/` 페이지 UI → FSD `widget/` 슬라이스 이동 (`CoverView`, `NotFoundView`, `SubmissionView`)
 - [x] `app/not-found.tsx` — 조기 `return` 버그 수정
 - [x] `react-router-dom`, `react-helmet-async` 의존성 제거
 - [x] SPA 레거시 제거 (`AppRouter_`, FSD `RootLayout.tsx`)
@@ -154,6 +155,85 @@ if (process.env.NEXT_PUBLIC_LHCI === 'true') {
 - FSD `src/app`과 Next `app/`은 별개 디렉터리 (의도된 공존 구조)
 - styled-components 상세 — 아래 §6
 
+### 5-1. `app/` vs `widget/` (FSD + App Router)
+
+Next `app/`은 **라우팅·metadata·layout**만 담고, 페이지 UI는 FSD `widget/` 슬라이스에 둡니다.
+
+```text
+app/
+  layout.tsx              metadata template, Providers
+  page.tsx                metadata + <CoverView />
+  not-found.tsx           metadata + <NotFoundView />
+  submission/
+    layout.tsx            <ProtectedRoute>
+    page.tsx              metadata + <SubmissionView />
+
+src/widget/
+  home/ui/CoverView.tsx
+  not-found/ui/NotFoundView.tsx
+  submission/ui/SubmissionView.tsx
+```
+
+| 레이어 | 역할 |
+| ------ | ---- |
+| `app/` | Server page 셸 — `metadata`, `dynamic`, layout |
+| `widget/` | 페이지 단위 UI 조합 (`'use client'`) |
+| `entities/` | 도메인 단위 UI·상태 |
+
+### 5-2. metadata `title.template`
+
+root layout에 template을 두면 하위 page는 **`%s`에 들어갈 문자열만** 지정하면 됩니다.
+
+```typescript
+// app/layout.tsx
+export const metadata = {
+  title: {
+    default: 'Find Football Player',
+    template: '%s | Find Football Player',
+  },
+}
+
+// app/page.tsx
+export const metadata = { title: 'Home' }
+// → <title>Home | Find Football Player</title>
+
+// app/not-found.tsx
+export const metadata = { title: '404' }
+// → <title>404 | Find Football Player</title>
+```
+
+- template을 **우회**하려면 `title: { absolute: '...' }` 사용
+- template을 **적용하지 않으려면** 하위 page에서 `title`을 생략 → root `default` 사용
+- `description`은 page마다 별도로 지정 (template 없음)
+
+### 5-3. barrel import (`@/widget`, `@/app`)와 번들
+
+**barrel(`index.ts`)에서 export한 모든 모듈이 전부 번들에 들어가는 것은 아닙니다.** Turbopack/webpack은 사용하는 export만 따라가는 **트리 쉐이킹**을 합니다.
+
+다만 barrel import가 문제가 되는 경우는 “전체 번들링”보다 다른 이유입니다.
+
+| 우려 | 실제 |
+| ---- | ---- |
+| export 전부가 번들에 포함 | ❌ 사용한 심볼만 따라감 (일반적) |
+| Server Component에서 client 모듈 끌려옴 | ⚠️ barrel 경유 시 `'use client'` 경계가 불명확해질 수 있음 |
+| 순환 참조 | ⚠️ `@/widget` → `SubmissionView` → `@/widget` 같은 패턴 주의 |
+| side effect 있는 re-export | ⚠️ barrel 체인에 side effect가 있으면 쉐이킹이 깨질 수 있음 |
+
+FSD는 **슬라이스 public API(`index.ts`)를 통한 import**를 권장하고, `@/widget/home/ui/CoverView` 같은 **deep import는 캡슐화를 깨므로 비권장**합니다.
+
+```typescript
+// 권장 — 슬라이스 public API
+import { CoverView } from '@/widget/home'
+
+// 가능하지만 FSD 비권장 — 내부 경로 직접 접근
+import CoverView from '@/widget/home/ui/CoverView'
+
+// 주의 — 최상위 barrel은 슬라이스 간 순환 참조에 취약
+import { ClubViews } from '@/widget'  // widget 내부에서는 @/widget/club 권장
+```
+
+실무적으로는 **page(`app/`)에서는 `@/widget/home`처럼 슬라이스 단위 import**, **widget 내부에서는 형제 슬라이스를 `@/widget/club`처럼 직접 import**하는 절충이 무난합니다. layout에서 `@/shared/ui/layout`처럼 세그먼트 직접 import가 필요한 경우는 §6-5 참고.
+
 ## 6. styled-components + App Router
 
 ### 6-1. Next에서 쓸 수는 있는데, 효율적이진 않음
@@ -181,7 +261,8 @@ app/layout.tsx          (Server)
        └─ Providers     ('use client')
             ├─ GlobalStyle      ← body #001d3d, reset
             ├─ ThemeProvider
-            └─ CoverPage 등     ('use client')
+            └─ main
+                 └─ CoverView 등  ('use client', widget/)
 ```
 
 styled-components는 원래 **브라우저에서 `<style>` 넣는 방식**. `GlobalStyle`이랑 페이지 styled가 전부 Client 트리 안에 있으면, **서버가 보내는 HTML에는 CSS가 거의 없음** → hydration 전까지 브라우저 기본 스타일로 그림.
