@@ -1,3 +1,5 @@
+'use client'
+
 const noopStorage: Storage = {
   getItem: () => null,
   setItem: () => {},

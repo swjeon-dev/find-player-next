@@ -1,3 +1,5 @@
+'use client'
+
 import { type IFirebasePlayer, Position } from '@common/model'
 import type { IHint } from '@/shared'
 

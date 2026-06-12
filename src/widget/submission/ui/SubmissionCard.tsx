@@ -1,3 +1,5 @@
+'use client'
+
 import { useRecoilValue } from 'recoil'
 
 import { SearchForm, HintBox } from '@/entities/search'

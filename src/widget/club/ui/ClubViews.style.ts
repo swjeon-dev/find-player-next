@@ -1,3 +1,5 @@
+'use client'
+
 import { SkeletonBase } from '@/shared'
 import styled, { css } from 'styled-components'
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback, useLayoutEffect, useState } from 'react'
 import { useSetRecoilState } from 'recoil'
 
