@@ -1,3 +1,1 @@
-export { queryClient } from './queryClient'
-export { setupQueryPersist } from './persistClient'
-export { default as AppRouterProvider } from './AppRouterProvider'
+export { default as Providers } from './Providers'
