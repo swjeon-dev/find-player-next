@@ -4,7 +4,7 @@ import { ROUTER_PATH } from '@/shared'
 
 import * as S from './not-found.style'
 
-function NotFoundContent() {
+function NotFoundView() {
   return (
     <S.Page>
       <S.Card>
@@ -22,4 +22,4 @@ function NotFoundContent() {
   )
 }
 
-export default NotFoundContent
+export default NotFoundView
