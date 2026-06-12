@@ -1,4 +1,4 @@
-import { Providers } from '@/app/providers'
+import { Providers, StyledComponentsRegistry } from '@/app/providers'
 import { Header } from '@/shared/ui/layout'
 
 export const metadata = {
@@ -17,12 +17,15 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body>
-        <Providers>
-          <header>
-            <Header />
-          </header>
-          <main>{children}</main>
-        </Providers>
+        {/* SSR 시 styled-components CSS를 <head>에 넣기 위한 래퍼 */}
+        <StyledComponentsRegistry>
+          <Providers>
+            <header>
+              <Header />
+            </header>
+            <main>{children}</main>
+          </Providers>
+        </StyledComponentsRegistry>
         <div id='modal-root' />
       </body>
     </html>
