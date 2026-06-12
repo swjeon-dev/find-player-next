@@ -51,12 +51,14 @@ const SubmissionCard = ({
           />
         )}
 
-        <SearchForm
-          quiz={quiz}
-          disabled={isDisabled}
-          setIsCorrect={setIsCorrect}
-          setHintArr={setHintArr}
-        />
+        {quiz && (
+          <SearchForm
+            quiz={quiz}
+            disabled={isDisabled}
+            setIsCorrect={setIsCorrect}
+            setHintArr={setHintArr}
+          />
+        )}
       </S.FormContainer>
 
       <HintBox hintArr={hintArr} />

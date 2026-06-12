@@ -1,9 +1,11 @@
 import { atom } from 'recoil'
 import { recoilPersist } from 'recoil-persist'
 
+import { sessionPersistStorage } from '@/shared/lib/storage/persistStorage'
+
 const { persistAtom: persistLeagueAtom } = recoilPersist({
   key: 'leagueInfo',
-  storage: sessionStorage,
+  storage: sessionPersistStorage,
 })
 
 export type LeagueInfo = {

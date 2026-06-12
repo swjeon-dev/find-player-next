@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSetRecoilState } from 'recoil'
 import type { StaticImageData } from 'next/image'
@@ -56,7 +56,7 @@ function LeagueSelectModalTrigger() {
 function LeagueSelectModalContainer({ children }: LeagueSelectModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const navigate = useNavigate()
+  const router = useRouter()
   const queryClient = useQueryClient()
   const setLeagueInfo = useSetRecoilState(leagueInfoState)
 
@@ -67,7 +67,7 @@ function LeagueSelectModalContainer({ children }: LeagueSelectModalProps) {
 
   const setLeagueRange = (league: leagueListProps) => {
     setLeagueInfo({ id: league.id })
-    navigate(ROUTER_PATH.SUBMISSION)
+    router.push(ROUTER_PATH.SUBMISSION)
   }
 
   const prefetchLeagueData = useCallback(

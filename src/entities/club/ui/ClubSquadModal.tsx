@@ -31,7 +31,7 @@ const Player = memo(function Player({
 
 interface IClubSquadModalProps {
   teamId: number
-  parentRef: React.RefObject<HTMLImageElement>
+  parentRef: React.RefObject<HTMLImageElement | null>
   offModal: () => void
 }
 

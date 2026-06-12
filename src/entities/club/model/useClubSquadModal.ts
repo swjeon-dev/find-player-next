@@ -17,8 +17,8 @@ export const useSelectPlayer = (cb: () => void) => {
 
 // props 타입 정의
 interface IUseModalPositionProps {
-  listRef: React.RefObject<HTMLUListElement>
-  parentRef: React.RefObject<HTMLElement>
+  listRef: React.RefObject<HTMLUListElement | null>
+  parentRef: React.RefObject<HTMLElement | null>
   triggerKey: number
 }
 

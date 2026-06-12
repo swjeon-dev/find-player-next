@@ -6,7 +6,9 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       '@/shared/lib/dev': path.join(
         __dirname,
-        'src/shared/lib/dev/index.prod.ts',
+        process.env.NODE_ENV === 'production'
+          ? 'src/shared/lib/dev/index.prod.ts'
+          : 'src/shared/lib/dev/index.ts',
       ),
     },
   },

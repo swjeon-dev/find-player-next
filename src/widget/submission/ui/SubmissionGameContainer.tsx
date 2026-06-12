@@ -4,7 +4,6 @@ import { useQuizGenerator } from '../model'
 import SubmissionCard from './SubmissionCard'
 import { SubmissionLoader } from './SubmissionLoader'
 import { Container } from './SubmissionGameContainer.style'
-// import { ProfileComp } from '@/shared'
 
 function SubmissionGameContainer() {
   const {
@@ -34,13 +33,11 @@ function SubmissionGameContainer() {
 
   return (
     <Container role='quiz-container'>
-      {/* <ProfileComp id='SubmissionGameContainer'> */}
       <SubmissionCard
         isGeneratingQuiz={isGeneratingQuiz}
         isChangingQuiz={isChangingQuiz}
         generateQuiz={generateQuiz}
       />
-      {/* </ProfileComp> */}
     </Container>
   )
 }

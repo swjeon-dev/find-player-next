@@ -1,19 +1,12 @@
-import { ClubViews, SubmissionGameContainer } from '@/widget'
+import SubmissionPage from './SubmissionPage'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Quiz',
-  description: 'Quiz',
-  keywords: 'Quiz',
-  author: 'up1',
+  description: 'Find Football Player — 선수 퀴즈',
 }
 
-function Submission() {
-  return (
-    <>
-      <ClubViews />
-      <SubmissionGameContainer />
-    </>
-  )
+export default function Submission() {
+  return <SubmissionPage />
 }
-
-export default Submission

@@ -2,10 +2,11 @@ import { atom } from 'recoil'
 import { recoilPersist } from 'recoil-persist'
 
 import type { IFirebasePlayer } from '@common/model'
+import { sessionPersistStorage } from '@/shared/lib/storage/persistStorage'
 
 const { persistAtom: persistQuizAtom } = recoilPersist({
   key: 'quizPlayer',
-  storage: sessionStorage,
+  storage: sessionPersistStorage,
 })
 
 type Quiz = IFirebasePlayer

@@ -46,6 +46,9 @@ function ClubViewsError({ refetch }: { refetch: () => void }) {
 }
 const ClubViews = () => {
   const leagueInfo = useRecoilValue(leagueInfoState)
+
+  if (!leagueInfo.id) return null
+
   const { teamIdsQuery, teamDatasQuery } = useFetchingTeamsDataInLeague(
     leagueInfo.id,
   )

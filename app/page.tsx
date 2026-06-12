@@ -1,40 +1,10 @@
-'use client'
-import styled from 'styled-components'
+import CoverPage from './CoverPage'
 
-import { LeagueSelectModalTrigger } from '@/entities'
-
-const CoverSection = styled.section`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-`
-
-const SectionHeading = styled.h2`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-`
-
-// export const metadata = {
-//   title: 'Home',
-//   description: 'Home',
-//   keywords: 'Home',
-//   author: 'up1',
-// }
-
-const Cover = () => {
-  return (
-    <CoverSection aria-labelledby='cover-game-heading'>
-      <SectionHeading id='cover-game-heading'>Game Start</SectionHeading>
-      <LeagueSelectModalTrigger />
-    </CoverSection>
-  )
+export const metadata = {
+  title: 'Home',
+  description: 'Find Football Player — 리그를 선택하고 선수 퀴즈를 시작하세요.',
 }
 
-export default Cover
+export default function HomePage() {
+  return <CoverPage />
+}

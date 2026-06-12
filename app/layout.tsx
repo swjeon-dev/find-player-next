@@ -1,11 +1,12 @@
-import { Providers } from '@/app'
-import { Header } from '@/shared'
+import { Providers } from '@/app/providers'
+import { Header } from '@/shared/ui/layout'
 
 export const metadata = {
-  title: '%s | Find Football Player',
-  description: '%s | Find Football Player',
-  keywords: '%s, Find Football Player',
-  author: 'up1',
+  title: {
+    default: 'Find Football Player',
+    template: '%s | Find Football Player',
+  },
+  description: 'Find Football Player',
 }
 
 export default function RootLayout({
@@ -22,6 +23,7 @@ export default function RootLayout({
           </header>
           <main>{children}</main>
         </Providers>
+        <div id='modal-root' />
       </body>
     </html>
   )
