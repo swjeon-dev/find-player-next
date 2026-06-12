@@ -1,1 +1,1 @@
-export { SubmissionGameContainer } from './ui'
+export * from './ui'

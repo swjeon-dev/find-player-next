@@ -1,4 +1,4 @@
-import ProtectedRoute from '@/app/routes/ProtectedRoute'
+import { ProtectedRoute } from '@/app/routes'
 
 export default function SubmissionLayout({
   children,
