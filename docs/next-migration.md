@@ -67,6 +67,7 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 - [x] SPA 레거시 제거 (`AppRouter_`, FSD `RootLayout.tsx`)
 - [x] SSR 호환 — `recoil-persist`/`query persist`의 `sessionStorage`·`localStorage` 접근을 클라이언트로 지연
 - [x] `app/submission/page.tsx` — `dynamic = 'force-dynamic'` (Recoil 상태 의존 라우트)
+- [x] styled-components FOUC 대응 — `compiler.styledComponents` + `StyledComponentsRegistry` (`src/app/providers/`)
 
 ### 3-3. `next.config.ts` 정리 ✅
 
@@ -83,9 +84,9 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 ),
 ```
 
-| 환경 | import `@/shared/lib/dev` | 동작 |
-|------|---------------------------|------|
-| `next dev` | `index.ts` → `Profiler.tsx` | 콘솔에 렌더 시간 출력 |
+| 환경         | import `@/shared/lib/dev`             | 동작                            |
+| ------------ | ------------------------------------- | ------------------------------- |
+| `next dev`   | `index.ts` → `Profiler.tsx`           | 콘솔에 렌더 시간 출력           |
 | `next build` | `index.prod.ts` → `Profiler.prod.tsx` | children만 반환 (오버헤드 없음) |
 
 > barrel import (`@/shared`)는 alias를 타지 않습니다. Profiler 사용 시 `@/shared/lib/dev`로 직접 import하세요.
@@ -100,14 +101,14 @@ Next 16에서는 `next dev` / `next build` 모두 Turbopack이 기본입니다. 
 
 ### 변수별 정리
 
-| 변수                                   | 접두사            | 이유                                                          |
-| -------------------------------------- | ----------------- | ------------------------------------------------------------- |
-| Functions (`FUNCTION_*`)               | ❌                | Cloud Functions = Node.js 환경                                |
-| `FOOTBALL_API_KEY`, `FIREBASE_API_KEY` | ❌                | 비밀키. 서버/CI/Functions 전용                                |
-| RTDB base URL                          | ✅ `NEXT_PUBLIC_` | 지금은 클라이언트 axios가 RTDB 직접 호출 (`client.ts`)        |
-| `NEXT_PUBLIC_BASE_PATH`                | ✅                | 서브패스 배포 시. Vercel 루트 배포면 미사용                   |
-| `LHCI_GITHUB_APP_TOKEN`                | ❌                | CI 스크립트(`lhci`, `.mjs`) 전용                              |
-| `NEXT_PUBLIC_LHCI`                     | ✅                | Lighthouse CI용. 아래 참고                                    |
+| 변수                                   | 접두사            | 이유                                                   |
+| -------------------------------------- | ----------------- | ------------------------------------------------------ |
+| Functions (`FUNCTION_*`)               | ❌                | Cloud Functions = Node.js 환경                         |
+| `FOOTBALL_API_KEY`, `FIREBASE_API_KEY` | ❌                | 비밀키. 서버/CI/Functions 전용                         |
+| RTDB base URL                          | ✅ `NEXT_PUBLIC_` | 지금은 클라이언트 axios가 RTDB 직접 호출 (`client.ts`) |
+| `NEXT_PUBLIC_BASE_PATH`                | ✅                | 서브패스 배포 시. Vercel 루트 배포면 미사용            |
+| `LHCI_GITHUB_APP_TOKEN`                | ❌                | CI 스크립트(`lhci`, `.mjs`) 전용                       |
+| `NEXT_PUBLIC_LHCI`                     | ✅                | Lighthouse CI용. 아래 참고                             |
 
 > Firebase 호출을 전부 Server Component / Route Handler로 옮기면 Firebase 관련 env는 접두사 없이 서버 전용으로 통일 가능
 
@@ -149,6 +150,113 @@ if (process.env.NEXT_PUBLIC_LHCI === 'true') {
 
 ## 5. 참고
 
-- styled-components — Client에서만 (`'use client'`). metadata는 Server `page`/`layout`에서 export
 - Provider·설정은 FSD `src/app/`, Next 라우트 파일만 루트 `app/`
 - FSD `src/app`과 Next `app/`은 별개 디렉터리 (의도된 공존 구조)
+- styled-components 상세 — 아래 §6
+
+## 6. styled-components + App Router
+
+### 6-1. Next에서 쓸 수는 있는데, 효율적이진 않음
+
+Next App Router에서 styled-components **쓸 수는 있음**. 다만 기본은 Server Component + 빌드 타임 CSS라, 지금처럼 쓰려면 Registry·`'use client'` 경계가 추가로 필요하고 런타임 주입 비용도 있음. **Next에 가장 잘 맞는 스타일 방식은 아님.**
+
+| 방식                        | App Router | 메모                   |
+| --------------------------- | ---------- | ---------------------- |
+| CSS Modules                 | ◎          | Next 기본, RSC 그대로  |
+| Tailwind                    | ◎          | 빌드 타임, 트리 쉐이킹 |
+| styled-components           | △          | 가능. Registry 필요    |
+| Panda CSS / Vanilla Extract | ○          | zero-runtime 쪽        |
+
+이 프로젝트는 Vite 때부터 styled-components 써 와서 **당장 갈아엎기보단 유지**. 나중에 UI 많이 손볼 때 CSS Modules나 Tailwind 같은 **빌드 타임 CSS**로 옮기는 게 맞아 보임.
+
+### 6-2. FOUC — client styled를 server layout이랑 같이 쓸 때
+
+홈 들어가면 잠깐 스타일 없는 화면 나오는 거, **styled-components 때문이 맞음** (FOUC).
+
+구조:
+
+```text
+app/layout.tsx          (Server)
+  └─ StyledComponentsRegistry
+       └─ Providers     ('use client')
+            ├─ GlobalStyle      ← body #001d3d, reset
+            ├─ ThemeProvider
+            └─ CoverPage 등     ('use client')
+```
+
+styled-components는 원래 **브라우저에서 `<style>` 넣는 방식**. `GlobalStyle`이랑 페이지 styled가 전부 Client 트리 안에 있으면, **서버가 보내는 HTML에는 CSS가 거의 없음** → hydration 전까지 브라우저 기본 스타일로 그림.
+
+Registry 없을 때 특히 눈에 띄는 건 `GlobalStyle` 쪽임. `Providers`가 client라 **body 배경(`#001d3d`)·reset·`box-sizing`이 첫 HTML에 안 들어감** → 홈 접속 시 흰 화면이 잠깐 보임. 그 아래 `LeagueSelectModal` 버튼 styled도 같은 이유로 늦게 붙음.
+
+`next.config.ts`의 `compiler.styledComponents: true`만으로는 FOUC 안 잡힘. 클래스명 정리용이고, **첫 HTML에 CSS 실어 보내는 건 Registry**가 함.
+
+### 6-3. 지금 적용해 둔 것
+
+```typescript
+// next.config.ts
+compiler: { styledComponents: true },
+```
+
+- `src/app/providers/StyledComponentsRegistry.tsx` — [Next CSS-in-JS 가이드](https://nextjs.org/docs/app/guides/css-in-js) 패턴
+- `app/layout.tsx` — Registry로 Providers 감쌈 (SSR 시 `<head>`에 style 넣기 위함)
+
+```text
+StyledComponentsRegistry   ← SSR 시 CSS 수집·주입
+  └─ Providers → Header, main(children)
+```
+
+### 6-4. Registry가 하는 일 (헷갈리기 쉬운 부분)
+
+Registry = 프로젝트에 만든 Client Component 래퍼. **스타일 모으고 head에 넣는 건 서버에서만.** 클라이언트에선 `children`만 반환.
+
+```text
+[1] 서버에서 Registry 실행
+      useServerInsertedHTML(콜백)  → 등록만. 아직 head에 안 넣음
+      return <StyleSheetManager>{children}</StyleSheetManager>
+
+[2] children 트리 렌더 (Manager 안)
+      styled-components가 CSS를 sheet에 모음  ← 이게 먼저
+
+[3] 트리 렌더 끝나서 스타일 다 모이면
+      아까 등록한 콜백 실행
+        getStyleElement() → <style>
+        return <>{styles}</> → Next가 <head>에 삽입  ← 이게 나중
+        clearTag() → sheet 비움
+```
+
+정리: **styled-components를 sheet에 모은 뒤, 콜백이 head에 넣음.** 시점은 트리 렌더가 끝나서 CSS가 모인 때.
+
+#### 서버 / 클라이언트
+
+|                         | 서버                                                | 클라이언트        |
+| ----------------------- | --------------------------------------------------- | ----------------- |
+| `StyleSheetManager`     | sheet에 CSS 수집                                    | 안 씀             |
+| `useServerInsertedHTML` | `<head>`에 `<style>`                                | **실행 안 됨**    |
+| Registry return         | `<StyleSheetManager>{children}</StyleSheetManager>` | `<>{children}</>` |
+
+클라이언트에선 head에 style 이미 와 있으니까 Manager 없이 children만. hydration으로 className 맞추면 끝. 이후 새 스타일은 styled-components가 평소처럼 브라우저에서 `<head>`에 넣음.
+
+**클라이언트에서 Registry가 style을 “다른 형태로” 넘기는 게 아님.** 서버가 첫 HTML에 넣어 둔 걸 쓰는 것뿐.
+
+<!-- #### `useServerInsertedHTML` ≠ `useEffect`
+
+둘 다 “렌더 중에 콜백 등록 → 나중에 실행” 느낌은 비슷한데:
+
+- `useEffect` — 클라이언트, paint **이후**
+- `useServerInsertedHTML` — **서버**가 HTML 만들 때, 스타일 쓰는 콘텐츠보다 **앞**에 끼워 넣으려는 용도
+
+브라우저 `useEffect`처럼 “렌더 끝나고 한 번”이 아니라, **서버 SSR 파이프라인 안에서** 모은 CSS를 HTML에 실어 보내는 훅. -->
+
+#### `clearTag()`
+
+`getStyleElement()`로 꺼낸 다음 sheet 비움. 안 비우면 레이아웃·페이지 여러 번 렌더할 때 `<head>`에 `<style>` 중복 쌓일 수 있음 (스트리밍 SSR).
+
+```text
+모음 → head에 넣음 → clearTag() → 다음 렌더는 빈 sheet부터
+```
+
+### 6-5. 그 외
+
+- styled + hooks 쓰는 UI는 `'use client'`. metadata는 server `page`/`layout`에서.
+- layout에서 `@/shared` barrel 쓰면 hooks가 server에 끌려올 수 있음 → `@/shared/ui/layout`처럼 직접 import.
+- Profiler stub은 `@/shared/lib/dev`로 직접 (barrel은 alias 안 탐).
