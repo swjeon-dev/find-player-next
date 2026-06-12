@@ -1,6 +1,8 @@
-import { useBreakpoint } from '@/shared'
-import { Link } from 'react-router-dom'
+'use client'
+import Link from 'next/link'
 import styled from 'styled-components'
+
+import { useBreakpoint } from '@/shared'
 
 const Container = styled.div`
   width: 100%;
@@ -66,7 +68,7 @@ const Header = () => {
   return (
     <Container>
       <TitleHeading>
-        <HomeLink to='/' $isTablet={isTablet}>
+        <HomeLink href='/' $isTablet={isTablet}>
           Find Football Player
         </HomeLink>
       </TitleHeading>

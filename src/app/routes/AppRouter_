@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import ProtectedRoute from './ProtectedRoute'
 import { RootLayout, ROUTER_PATH, SkeletonBase } from '@/shared'
-import { Cover } from '@/pages/cover'
+import { Cover } from 'app/cover'
 import { NotFound } from '@/pages/not-found'
 
 const Submission = lazy(() =>
@@ -51,8 +51,7 @@ const routes = [
   },
 ]
 
-const basename =
-  process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, '') || '/'
+const basename = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, '') || '/'
 
 const router = createBrowserRouter(routes, {
   basename,
