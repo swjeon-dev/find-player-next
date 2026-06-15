@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import styled from 'styled-components'
 
-import { useBreakpoint } from '@/shared'
+import { useBreakpoint } from '@/shared/lib/hooks'
 
 const Container = styled.div`
   width: 100%;

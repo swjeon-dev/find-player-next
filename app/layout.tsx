@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { Providers, StyledComponentsRegistry } from '@/app/providers'
-import { Header } from '@/shared'
+import { Header } from '@/shared/ui/layout'
 
 export const metadata: Metadata = {
   title: {
