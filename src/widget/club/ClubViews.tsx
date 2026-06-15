@@ -10,7 +10,7 @@ import {
 
 import ClubViewsError from './ui/ClubViewsError'
 import ClubViewsContent from './ui/ClubViewsContent'
-import type { IFirebaseTeamDetail } from '@/shared'
+import type { IFirebaseTeamDetail } from '@common/model'
 
 const ClubViews = () => {
   const leagueInfo = useRecoilValue(leagueInfoState)

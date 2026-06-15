@@ -3,7 +3,7 @@
 import { Club } from '@/entities/club'
 
 import * as S from './ClubViews.style'
-import type { IFirebaseTeamDetail } from '@/shared'
+import type { IFirebaseTeamDetail } from '@common/model'
 
 interface IClubViewsContentProps {
   showTabletToggle: boolean

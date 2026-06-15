@@ -1,4 +1,4 @@
-export interface IFirebaseTeamDetail {
+interface IFirebaseTeamDetail {
   id: number
   name: string
   code: string
@@ -7,3 +7,5 @@ export interface IFirebaseTeamDetail {
   logo: string
   national: boolean
 }
+
+export type { IFirebaseTeamDetail }
