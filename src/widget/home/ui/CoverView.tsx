@@ -2,7 +2,7 @@
 
 import styled from 'styled-components'
 
-import { LeagueSelectModalTrigger } from '@/entities/league'
+import { LeagueSelectModal } from '@/entities/league'
 
 const CoverSection = styled.section`
   width: 100%;
@@ -26,7 +26,7 @@ function CoverView() {
   return (
     <CoverSection aria-labelledby='cover-game-heading'>
       <SectionHeading id='cover-game-heading'>Game Start</SectionHeading>
-      <LeagueSelectModalTrigger />
+      <LeagueSelectModal />
     </CoverSection>
   )
 }
