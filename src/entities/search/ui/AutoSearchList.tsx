@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import * as S from './AutoSearch.style'
 import type { IFirebasePlayer } from '@common/model'
+import { useAutocompletePaint } from '../model/useAutocomplete'
 
 interface IAutoSearchProps {
   searchingPlayers: IFirebasePlayer[]
@@ -10,20 +10,16 @@ interface IAutoSearchProps {
   focusedIndex: number
 }
 
-const AutoSearch = ({
+const AutoSearchList = ({
   searchingPlayers,
   handleSelect,
   focusedIndex,
 }: IAutoSearchProps) => {
-  const listRef = useRef<HTMLUListElement>(null)
+  const { hasResults, listRef } = useAutocompletePaint(
+    focusedIndex,
+    searchingPlayers,
+  )
 
-  useEffect(() => {
-    if (focusedIndex < 0 || !listRef.current) return
-    const el = listRef.current.children[focusedIndex] as HTMLElement | undefined
-    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [focusedIndex])
-
-  const hasResults = searchingPlayers.length > 0
   if (!hasResults) return null
 
   return (
@@ -48,4 +44,4 @@ const AutoSearch = ({
   )
 }
 
-export default AutoSearch
+export default AutoSearchList
