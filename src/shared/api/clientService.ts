@@ -1,5 +1,5 @@
 import type { IFirebasePlayer } from '@common/model'
-import { FIREBASE_API_ENDPOINT } from '../config'
+import FIREBASE_API_ENDPOINT from '../config/firebaseRoute'
 import {
   getFirebaseURLPath,
   type FirebaseReturnPath,
