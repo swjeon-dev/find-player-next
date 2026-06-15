@@ -26,9 +26,7 @@ export default function RootLayout({
         {/* SSR 시 styled-components CSS를 <head>에 넣기 위한 래퍼 */}
         <StyledComponentsRegistry>
           <Providers>
-            <header>
-              <Header />
-            </header>
+            <Header />
             <main>{children}</main>
           </Providers>
         </StyledComponentsRegistry>

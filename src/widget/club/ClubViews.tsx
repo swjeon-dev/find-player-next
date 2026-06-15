@@ -11,7 +11,7 @@ import {
 import ClubViewsError from './ui/ClubViewsError'
 import ClubViewsContent from './ui/ClubViewsContent'
 
-const ClubViews = () => {
+function ClubViews() {
   const leagueInfo = useRecoilValue(leagueInfoState)
   const { teamIdsQuery, teamDatasQuery } = useFetchingTeamsDataInLeague(
     leagueInfo.id ?? 0,

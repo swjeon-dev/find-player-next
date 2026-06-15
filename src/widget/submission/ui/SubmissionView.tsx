@@ -1,5 +1,3 @@
-'use client'
-
 import { ClubViews } from '@/widget/club'
 import SubmissionGameContainer from './SubmissionGameContainer'
 
