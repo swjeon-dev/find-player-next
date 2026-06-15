@@ -1,4 +1,3 @@
-// TODO: widget 경로 import 제거 예정
 'use client'
 
 import { useCallback, useState } from 'react'

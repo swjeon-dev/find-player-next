@@ -1,9 +1,9 @@
 'use client'
 
-import { Club } from '@/entities/club'
-
 import * as S from './ClubViews.style'
 import type { IFirebaseTeamDetail } from '@common/model'
+
+import ClubWithSquadModal from './ClubWithSquadModal'
 
 interface IClubViewsContentProps {
   showTabletToggle: boolean
@@ -50,11 +50,10 @@ const ClubViewsContent = ({
                 const teamData = teamDatas?.[idx]
                 if (teamData) {
                   return (
-                    <Club
+                    <ClubWithSquadModal
                       key={teamId}
                       {...teamData}
                       offTablet={closeTabletPanel}
-                      enableSquadModal
                     />
                   )
                 }
