@@ -6,7 +6,7 @@ import {
   useFetchingTeamPlayersData,
   useModalPosition,
   useSelectPlayer,
-} from '../model'
+} from '@/entities/club'
 import * as S from './ClubSquadModal.style'
 
 function Message({ message }: { message: string; isLoading?: boolean }) {
@@ -17,7 +17,7 @@ function Message({ message }: { message: string; isLoading?: boolean }) {
   )
 }
 
-const Player = memo(function Player({
+const Player = memo(function ({
   name,
   handleClick,
 }: {

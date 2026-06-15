@@ -7,7 +7,15 @@ import { useClubSquadModalTrigger, prefetchTeamPlayersId } from '../model'
 import type { IFirebaseTeamDetail } from '@/shared'
 import * as S from './Club.style'
 
-const ClubSquadModalLazy = lazy(() => import('./ClubSquadModal'))
+const ClubSquadModalLazy = lazy(() => import('@/widget/club/ui/ClubSquadModal'))
+const prefetchClubSquadModal = () => {
+  import('@/widget/club/ui/ClubSquadModal')
+}
+
+interface ClubProps extends IFirebaseTeamDetail {
+  offTablet: () => void
+  enableSquadModal?: boolean
+}
 
 const Club = ({
   logo,
@@ -15,10 +23,7 @@ const Club = ({
   id,
   offTablet,
   enableSquadModal = false,
-}: IFirebaseTeamDetail & {
-  offTablet: () => void
-  enableSquadModal?: boolean
-}) => {
+}: ClubProps) => {
   const queryClient = useQueryClient()
   const parentRef = useRef<HTMLImageElement>(null)
   const {
@@ -27,7 +32,10 @@ const Club = ({
     handleMouseEnter,
     handleMouseLeave,
     handleModalClose,
-  } = useClubSquadModalTrigger({ onClose: offTablet })
+  } = useClubSquadModalTrigger({
+    onClose: offTablet,
+    ...(enableSquadModal && { onHover: prefetchClubSquadModal }),
+  })
 
   useEffect(() => {
     if (!id) return
