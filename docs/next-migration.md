@@ -49,7 +49,7 @@ GitHub Secrets 이름(`VITE_FIREBASE_API_KEY` 등)은 functions/동기화 워크
 
 **완료**
 
-- [x] `app/layout.tsx` + `src/app/providers/Providers.tsx` (Query, Recoil, Theme, GlobalStyle)
+- [x] `app/layout.tsx` + `src/app/providers/Providers.tsx` (Query, Recoil, Theme, `global.css`)
 - [x] `src/pages/*` → `app/page.tsx`, `app/submission/page.tsx`, `app/not-found.tsx`
 - [x] `Header` — `react-router-dom` Link → `next/link`
 - [x] `tsconfig` include에 `app` 추가
@@ -174,11 +174,11 @@ src/widget/
   submission/ui/SubmissionView.tsx
 ```
 
-| 레이어 | 역할 |
-| ------ | ---- |
-| `app/` | Server page 셸 — `metadata`, `dynamic`, layout |
-| `widget/` | 페이지 단위 UI 조합 (`'use client'`) |
-| `entities/` | 도메인 단위 UI·상태 |
+| 레이어      | 역할                                           |
+| ----------- | ---------------------------------------------- |
+| `app/`      | Server page 셸 — `metadata`, `dynamic`, layout |
+| `widget/`   | 페이지 단위 UI 조합 (`'use client'`)           |
+| `entities/` | 도메인 단위 UI·상태                            |
 
 ### 5-2. metadata `title.template`
 
@@ -212,12 +212,12 @@ export const metadata = { title: '404' }
 
 다만 barrel import가 문제가 되는 경우는 “전체 번들링”보다 다른 이유입니다.
 
-| 우려 | 실제 |
-| ---- | ---- |
-| export 전부가 번들에 포함 | ❌ 사용한 심볼만 따라감 (일반적) |
-| Server Component에서 client 모듈 끌려옴 | ⚠️ barrel 경유 시 `'use client'` 경계가 불명확해질 수 있음 |
-| 순환 참조 | ⚠️ `@/widget` → `SubmissionView` → `@/widget` 같은 패턴 주의 |
-| side effect 있는 re-export | ⚠️ barrel 체인에 side effect가 있으면 쉐이킹이 깨질 수 있음 |
+| 우려                                    | 실제                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| export 전부가 번들에 포함               | ❌ 사용한 심볼만 따라감 (일반적)                             |
+| Server Component에서 client 모듈 끌려옴 | ⚠️ barrel 경유 시 `'use client'` 경계가 불명확해질 수 있음   |
+| 순환 참조                               | ⚠️ `@/widget` → `SubmissionView` → `@/widget` 같은 패턴 주의 |
+| side effect 있는 re-export              | ⚠️ barrel 체인에 side effect가 있으면 쉐이킹이 깨질 수 있음  |
 
 FSD는 **슬라이스 public API(`index.ts`)를 통한 import**를 권장하고, `@/widget/home/ui/CoverView` 같은 **deep import는 캡슐화를 깨므로 비권장**합니다.
 
@@ -229,7 +229,7 @@ import { CoverView } from '@/widget/home'
 import CoverView from '@/widget/home/ui/CoverView'
 
 // 주의 — 최상위 barrel은 슬라이스 간 순환 참조에 취약
-import { ClubViews } from '@/widget'  // widget 내부에서는 @/widget/club 권장
+import { ClubViews } from '@/widget' // widget 내부에서는 @/widget/club 권장
 ```
 
 실무적으로는 **page(`app/`)에서는 `@/widget/home`처럼 슬라이스 단위 import**, **widget 내부에서는 형제 슬라이스를 `@/widget/club`처럼 직접 import**하는 절충이 무난합니다. layout에서 `@/shared/ui/layout`처럼 세그먼트 직접 import가 필요한 경우는 §6-5 참고.
@@ -341,3 +341,49 @@ Registry = 프로젝트에 만든 Client Component 래퍼. **스타일 모으고
 - styled + hooks 쓰는 UI는 `'use client'`. metadata는 server `page`/`layout`에서.
 - layout에서 `@/shared` barrel 쓰면 hooks가 server에 끌려올 수 있음 → `@/shared/ui/layout`처럼 직접 import.
 - Profiler stub은 `@/shared/lib/dev`로 직접 (barrel은 alias 안 탐).
+
+## 7. GlobalStyle → `global.css` (styled-components reset 이전) ✅
+
+styled-components `GlobalStyle` + `styled-reset`을 제거하고, **빌드 타임 global CSS**로 옮겼습니다. 컴포넌트 styled-components → CSS Modules 전환(§6-1)의 1단계입니다.
+
+### 7-1. 변경 요약
+
+| Before | After |
+| ------ | ----- |
+| `GlobalStyle.tsx` (`createGlobalStyle` + `styled-reset`) | `src/app/styles/global.css` |
+| Client `Providers`에서 `<GlobalStyle />` mount | Server `app/layout.tsx`에서 `@/app/styles` import |
+| Meyer reset (`styled-reset`, styled-components 의존) | `modern-normalize` (`@import` in CSS) |
+
+### 7-2. `global.css`
+
+```css
+@import 'modern-normalize/modern-normalize.css';
+
+* { box-sizing: border-box; }
+body {
+  width: 100%;
+  height: 100%;
+  background-color: #001d3d;
+  color: white;
+  margin: 0;
+}
+a { text-decoration: none; }
+```
+
+- **reset**: `styled-reset`(Meyer, 레거시 브라우저 대응) → **`modern-normalize`**(최신 브라우저 baseline, 파일 크기 작음 → 로딩 유리)
+- **앱 토큰**: body 배경·글자색·`box-sizing`·링크 밑줨은 기존 `GlobalStyle`과 동일
+
+### 7-3. import 경로
+
+```typescript
+// app/layout.tsx (Server)
+import '@/app/styles' // → styles/index.ts → global.css side-effect
+```
+
+`Providers`에서는 `GlobalStyle` 제거. body 배경 FOUC는 layout import로 **첫 HTML `<head>`에 CSS 포함**됩니다.
+
+### 7-4. 남은 작업
+
+- [ ] 컴포넌트 `.style.ts` → CSS Modules (파일 단위 점진)
+- [ ] `ThemeProvider` / `StyledComponentsRegistry` / `styled-components` 의존성 제거
+- [ ] `styled-reset` 패키지 제거 (GlobalStyle 삭제 후 미사용)

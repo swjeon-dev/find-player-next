@@ -9,7 +9,6 @@ import { theme } from '@/shared'
 
 import { queryClient } from './queryClient'
 import { setupQueryPersist } from './persistClient'
-import { GlobalStyle } from '../styles'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -19,10 +18,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <RecoilRoot>
-          <GlobalStyle />
-          {children}
-        </RecoilRoot>
+        <RecoilRoot>{children}</RecoilRoot>
       </ThemeProvider>
     </QueryClientProvider>
   )

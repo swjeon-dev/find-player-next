@@ -1,3 +1,5 @@
+import '@/app/styles'
+
 import type { Metadata } from 'next'
 
 import { Providers, StyledComponentsRegistry } from '@/app/providers'
