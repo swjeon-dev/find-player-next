@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { breakpoints } from '../../config'
+import { breakpoints } from '@/shared'
 
 export type BreakpointMatches = {
   readonly mobile: boolean
@@ -10,7 +10,6 @@ export type BreakpointMatches = {
   readonly desktop: boolean
 }
 
-/** `theme.media`와 동일한 max-width 구간을 배타적으로 나눈 값 (컴포넌트 분기용) */
 export type BreakpointName = 'mobile' | 'tablet' | 'desktop'
 
 const queries = {
@@ -70,9 +69,7 @@ function readVirtualKeyboardOpen(): boolean {
 }
 
 interface UseBreakpointReturn {
-  /** `theme.media`와 같은 의미: 해당 max-width 미디어쿼리가 현재 참인지 */
   matches: BreakpointMatches
-  /** 한 구간만 선택 (조건부 렌더 등) */
   breakpoint: BreakpointName
   width: number
   /** 특정 max-width 이하인지 한 번에 확인 */

@@ -1,14 +1,6 @@
 @import 'modern-normalize/modern-normalize.css';
 
-/*
- * 디자인 토큰 — shared/config/theme.ts breakpoints와 동기화
- * 주의: @media 조건식에는 var() 사용 불가 → px 리터럴 + 아래 변수는 주석·속성값용
- */
 :root {
-  --bp-mobile: 640px;
-  --bp-tablet: 768px;
-  --bp-desktop: 1024px;
-
   --color-bg: #001d3d;
   --color-surface: #023047;
   --color-text: white;
