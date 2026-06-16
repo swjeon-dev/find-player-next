@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useMemo } from 'react'
 
 import { debounce, type DebouncedFunction } from '../debounce'

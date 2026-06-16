@@ -1,3 +1,5 @@
+'use client'
+
 import { Profiler } from 'react'
 
 export default function ProfileComp({

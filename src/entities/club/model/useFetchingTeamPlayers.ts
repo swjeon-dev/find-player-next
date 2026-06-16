@@ -1,15 +1,13 @@
+'use client'
+
 import {
   useQuery,
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query'
 
-import {
-  fetchPlayer,
-  fetchTeamPlayerIds,
-  queryKeysMain,
-  type IFirebasePlayer,
-} from '@/shared'
+import { fetchPlayer, fetchTeamPlayerIds, queryKeysMain } from '@/shared'
+import type { IFirebasePlayer } from '@common/model'
 
 function prefetchTeamPlayersId(
   queryClient: QueryClient,

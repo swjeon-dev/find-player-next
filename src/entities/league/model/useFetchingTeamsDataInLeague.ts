@@ -1,14 +1,17 @@
+'use client'
+
 import {
   useQueries,
   useQuery,
   type UseQueryOptions,
 } from '@tanstack/react-query'
 
+import type { IFirebaseTeamDetail } from '@common/model'
+
 import {
   fetchTeam,
   fetchTeamIdsInLeague,
   queryKeysMain,
-  type IFirebaseTeamDetail,
 } from '@/shared'
 
 const useFetchingTeamsDataInLeague = (leagueId: number) => {

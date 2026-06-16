@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 
 /** 값 변경을 지연해 반환합니다. 입력값·hover 상태 등에 사용합니다. */

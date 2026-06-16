@@ -1,0 +1,24 @@
+.container {
+  min-width: 70px;
+  aspect-ratio: 1/1;
+  position: relative;
+  text-align: center;
+  padding: 5px;
+  transition: transform 0.3s ease-in-out;
+  cursor: auto;
+}
+
+.active {
+  cursor: pointer;
+}
+.active:hover {
+  transform: scale(1.05);
+  z-index: 5;
+}
+
+img.emblem {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  display: block; /* 하단 여백 제거 */
+}

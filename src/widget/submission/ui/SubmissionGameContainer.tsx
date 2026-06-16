@@ -1,10 +1,11 @@
+'use client'
+
 import { useEffect } from 'react'
 
 import { useQuizGenerator } from '../model'
 import SubmissionCard from './SubmissionCard'
 import { SubmissionLoader } from './SubmissionLoader'
-import { Container } from './SubmissionGameContainer.style'
-// import { ProfileComp } from '@/shared'
+import styles from './SubmissionGameContainer.module.css'
 
 function SubmissionGameContainer() {
   const {
@@ -33,15 +34,13 @@ function SubmissionGameContainer() {
   }
 
   return (
-    <Container role='quiz-container'>
-      {/* <ProfileComp id='SubmissionGameContainer'> */}
+    <div className={styles['container']} role='quiz-container'>
       <SubmissionCard
         isGeneratingQuiz={isGeneratingQuiz}
         isChangingQuiz={isChangingQuiz}
         generateQuiz={generateQuiz}
       />
-      {/* </ProfileComp> */}
-    </Container>
+    </div>
   )
 }
 

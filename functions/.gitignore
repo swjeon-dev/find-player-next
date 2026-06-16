@@ -10,6 +10,7 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+.env
 
 src/shared
 dist/

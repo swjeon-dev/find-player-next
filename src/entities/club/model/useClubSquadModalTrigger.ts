@@ -1,13 +1,17 @@
+'use client'
+
 import { useCallback, useState } from 'react'
 
 import { useDebouncedValue } from '@/shared'
 
 interface UseClubSquadModalTriggerParams {
   onClose: () => void
+  onHover?: () => void
 }
 
 export const useClubSquadModalTrigger = ({
   onClose,
+  onHover,
 }: UseClubSquadModalTriggerParams) => {
   const [isHover, setIsHover] = useState(false)
   const [clicked, setClicked] = useState(false)
@@ -16,8 +20,8 @@ export const useClubSquadModalTrigger = ({
   const handleMouseEnter = useCallback(() => {
     if (clicked) return
     setIsHover(true)
-    void import('../ui/ClubSquadModal')
-  }, [clicked])
+    onHover?.()
+  }, [clicked, onHover])
 
   const handleMouseLeave = useCallback(() => {
     setClicked(false)
@@ -38,4 +42,3 @@ export const useClubSquadModalTrigger = ({
     handleModalClose,
   }
 }
-

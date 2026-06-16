@@ -1,9 +1,13 @@
+'use client'
+
 import { atom } from 'recoil'
 import { recoilPersist } from 'recoil-persist'
 
+import { sessionPersistStorage } from '@/shared'
+
 const { persistAtom: persistLeagueAtom } = recoilPersist({
   key: 'leagueInfo',
-  storage: sessionStorage,
+  storage: sessionPersistStorage,
 })
 
 export type LeagueInfo = {

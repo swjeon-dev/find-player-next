@@ -1,1 +1,1 @@
-export * from './ui'
+export { default as ClubViews } from './ClubViews'

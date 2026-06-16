@@ -1,1 +1,1 @@
-export { default as LeagueSelectModalTrigger } from './LeagueSelectModal'
+export { default as LeagueSelectModal } from './LeagueSelectModal'

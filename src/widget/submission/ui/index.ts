@@ -1,2 +1,2 @@
 export { default as SubmissionGameContainer } from './SubmissionGameContainer'
-export { SubmissionLoader } from './SubmissionLoader'
+export { default as SubmissionView } from './SubmissionView'

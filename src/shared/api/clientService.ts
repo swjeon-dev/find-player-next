@@ -1,9 +1,9 @@
-import { FIREBASE_API_ENDPOINT } from '../config'
+import type { IFirebasePlayer, IFirebaseTeamDetail } from '@common/model'
+import FIREBASE_API_ENDPOINT from '../config/firebaseRoute'
 import {
   getFirebaseURLPath,
   type FirebaseReturnPath,
 } from '../config/firebasePath'
-import type { IFirebasePlayer, IFirebaseTeamDetail } from '../types'
 import { firebaseApiInstance } from './client'
 
 export type FilteringPlayerNode = {

@@ -2,12 +2,12 @@
 # https://tech.kakaoent.com/front-end/2022/220602-lighthouse-with-github-actions/
 # 1) https://github.com/apps/lighthouse-ci 설치
 # 2) Repo secret: LHCI_GITHUB_APP_TOKEN
-# 3) master 대상 PR push → Checks 탭에서 확인
+# 3) main 대상 PR push → Checks 탭에서 확인
 name: Lighthouse CI
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,9 +35,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_LHCI: 'true'
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FOOTBALL_API_KEY: ${{ secrets.VITE_FOOTBALL_API_KEY }}
+          NEXT_PUBLIC_LHCI: 'true'
 
       - name: Verify Lighthouse GitHub App token
         if: github.event_name == 'pull_request'

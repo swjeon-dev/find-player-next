@@ -1,11 +1,14 @@
+'use client'
+
 import { atom } from 'recoil'
 import { recoilPersist } from 'recoil-persist'
 
-import type { IFirebasePlayer } from '@/shared'
+import type { IFirebasePlayer } from '@common/model'
+import { sessionPersistStorage } from '@/shared'
 
 const { persistAtom: persistQuizAtom } = recoilPersist({
   key: 'quizPlayer',
-  storage: sessionStorage,
+  storage: sessionPersistStorage,
 })
 
 type Quiz = IFirebasePlayer

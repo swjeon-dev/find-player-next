@@ -1,23 +1,34 @@
-import { Navigate, Outlet } from 'react-router-dom'
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { useRecoilValue } from 'recoil'
 
 import { ROUTER_PATH } from '@/shared'
 import { leagueInfoState } from '@/entities/league'
 
-function ProtectedRoute() {
+interface ProtectedRouteProps {
+  children: React.ReactNode
+}
+
+function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const router = useRouter()
   const leagueInfo = useRecoilValue(leagueInfoState)
 
-  // Vite는 VITE_* 를 `vite build` 시점에 번들에 넣습니다.
-  if (import.meta.env.VITE_LHCI === 'true') {
-    return <Outlet />
-  }
+  const canAccess =
+    process.env.NEXT_PUBLIC_LHCI === 'true' || Boolean(leagueInfo.id)
 
-  if (!leagueInfo.id) {
-    alert('먼저 리그를 선택해주세요.')
-    return <Navigate to={ROUTER_PATH.HOME} replace />
-  }
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_LHCI === 'true') return
+    if (!leagueInfo.id) {
+      alert('먼저 리그를 선택해주세요.')
+      router.replace(ROUTER_PATH.HOME)
+    }
+  }, [leagueInfo.id, router])
 
-  return <Outlet />
+  if (!canAccess) return null
+
+  return <>{children}</>
 }
 
 export default ProtectedRoute

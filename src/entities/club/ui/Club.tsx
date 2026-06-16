@@ -1,62 +1,45 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { lazy, memo, Suspense, useEffect, useRef } from 'react'
+'use client'
 
-import { useClubSquadModalTrigger, prefetchTeamPlayersId } from '../model'
-import type { IFirebaseTeamDetail } from '@/shared'
-import * as S from './Club.style'
+import { memo } from 'react'
+import clsx from 'clsx'
 
-const ClubSquadModalLazy = lazy(() => import('./ClubSquadModal'))
+import styles from './Club.module.css'
+
+interface ClubProps {
+  logo: string
+  name: string
+  isActive?: boolean
+  emblemRef?: React.RefObject<HTMLImageElement | null>
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
+  children?: React.ReactNode
+}
 
 const Club = ({
   logo,
   name,
-  id,
-  offTablet,
-  enableSquadModal = false,
-}: IFirebaseTeamDetail & {
-  offTablet: () => void
-  enableSquadModal?: boolean
-}) => {
-  const queryClient = useQueryClient()
-  const parentRef = useRef<HTMLImageElement>(null)
-  const {
-    isHover,
-    shouldRenderModal,
-    handleMouseEnter,
-    handleMouseLeave,
-    handleModalClose,
-  } = useClubSquadModalTrigger({ onClose: offTablet })
-
-  useEffect(() => {
-    if (!id) return
-    prefetchTeamPlayersId(queryClient, { teamId: id })
-  }, [id, queryClient])
-
+  isActive = false,
+  emblemRef,
+  onMouseEnter,
+  onMouseLeave,
+  children,
+}: ClubProps) => {
   return (
-    <>
-      <S.Container
-        $isActive={enableSquadModal && isHover}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <S.Emblem
-          src={logo}
-          alt={name}
-          ref={parentRef}
-          width='60'
-          height='60'
-        />
-        {enableSquadModal && shouldRenderModal && isHover && (
-          <Suspense fallback={null}>
-            <ClubSquadModalLazy
-              teamId={id}
-              parentRef={parentRef}
-              offModal={handleModalClose}
-            />
-          </Suspense>
-        )}
-      </S.Container>
-    </>
+    <div
+      className={clsx(styles['container'], isActive && styles['active'])}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <img
+        className={styles['emblem']}
+        src={logo}
+        alt={name}
+        ref={emblemRef}
+        width='60'
+        height='60'
+      />
+      {children}
+    </div>
   )
 }
 

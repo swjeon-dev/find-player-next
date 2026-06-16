@@ -1,11 +1,15 @@
+'use client'
+
 import { useRecoilValue } from 'recoil'
 
-import { SearchForm, HintBox } from '@/entities/search'
+import { HintList, SearchForm } from '@/entities/search'
 import { quizState } from '../model'
 import ChangeButton from './ChangeButton'
 import { useSubmissionGame } from '../model'
 
-import * as S from './SubmissionCard.style'
+import styles from './SubmissionCard.module.css'
+import { SkeletonBase } from '@/shared'
+import clsx from 'clsx'
 
 interface SubmissionCardProps {
   isGeneratingQuiz: boolean
@@ -31,35 +35,43 @@ const SubmissionCard = ({
 
   return (
     <div role='submission-card'>
-      <S.FormContainer
-        $isPending={isGeneratingQuiz}
-        $isChanging={showFetchAnimation}
-        role='submission-card'
+      <div
+        className={clsx(
+          styles['form-container'],
+          isGeneratingQuiz
+            ? styles['opacity-pending']
+            : showFetchAnimation && styles['opacity-changing'],
+        )}
       >
         {showPhotoSkeleton ? (
-          <S.PhotoSkeleton />
+          <SkeletonBase className={styles['photo-skeleton']} />
         ) : (
-          <S.Photo
+          <img
+            className={clsx(
+              styles['photo'],
+              !isCorrect && styles['not-correct--blur'],
+              showFetchAnimation && styles['changing-animation'],
+            )}
             key={quiz?.photo}
             draggable={false}
             src={quiz?.photo}
             alt={quiz?.name ?? 'quiz-player'}
-            $isCorrect={isCorrect}
-            $isChanging={showFetchAnimation}
             width='160'
             height='180'
           />
         )}
 
-        <SearchForm
-          quiz={quiz}
-          disabled={isDisabled}
-          setIsCorrect={setIsCorrect}
-          setHintArr={setHintArr}
-        />
-      </S.FormContainer>
+        {quiz && (
+          <SearchForm
+            quiz={quiz}
+            disabled={isDisabled}
+            setIsCorrect={setIsCorrect}
+            setHintArr={setHintArr}
+          />
+        )}
+      </div>
 
-      <HintBox hintArr={hintArr} />
+      <HintList hintArr={hintArr} />
       <ChangeButton onClick={changeQuiz} />
     </div>
   )

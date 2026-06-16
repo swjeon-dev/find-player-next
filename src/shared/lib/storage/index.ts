@@ -1,0 +1,1 @@
+export { sessionPersistStorage } from './persistStorage'

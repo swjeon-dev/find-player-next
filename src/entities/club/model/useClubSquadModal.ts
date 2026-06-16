@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback, useLayoutEffect, useState } from 'react'
 import { useSetRecoilState } from 'recoil'
 
@@ -17,8 +19,8 @@ export const useSelectPlayer = (cb: () => void) => {
 
 // props 타입 정의
 interface IUseModalPositionProps {
-  listRef: React.RefObject<HTMLUListElement>
-  parentRef: React.RefObject<HTMLElement>
+  listRef: React.RefObject<HTMLUListElement | null>
+  parentRef: React.RefObject<HTMLElement | null>
   triggerKey: number
 }
 
@@ -26,8 +28,14 @@ export const useModalPosition = ({
   listRef,
   parentRef,
   triggerKey,
-}: IUseModalPositionProps): { x: boolean; y: boolean; isReady: boolean } => {
-  const [isTransfer, setIsTransfer] = useState({ x: false, y: false })
+}: IUseModalPositionProps): {
+  isTransfer: { x: boolean; y: boolean }
+  isReady: boolean
+} => {
+  const [isTransfer, setIsTransfer] = useState<{ x: boolean; y: boolean }>({
+    x: false,
+    y: false,
+  })
   const [isReady, setIsReady] = useState(false)
 
   const recalcPosition = useCallback(() => {
@@ -60,5 +68,5 @@ export const useModalPosition = ({
     return () => observer.disconnect()
   }, [recalcPosition, triggerKey])
 
-  return { ...isTransfer, isReady }
+  return { isTransfer, isReady }
 }

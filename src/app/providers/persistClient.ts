@@ -1,13 +1,17 @@
+'use client'
+
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 
 import { queryClient } from './queryClient'
 
-const localStoragePersister = createAsyncStoragePersister({
-  storage: window.localStorage,
-})
-
 export const setupQueryPersist = () => {
+  if (typeof window === 'undefined') return
+
+  const localStoragePersister = createAsyncStoragePersister({
+    storage: window.localStorage,
+  })
+
   persistQueryClient({
     queryClient,
     persister: localStoragePersister,
