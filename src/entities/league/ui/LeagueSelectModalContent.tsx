@@ -2,7 +2,7 @@
 
 import type { RefObject } from 'react'
 
-import * as S from './LeagueSelectModal.style'
+import styles from './LeagueSelectModal.module.css'
 import type { LeagueListItem } from '../model/useLeagueSelectModal'
 import { plImage } from '../assets'
 
@@ -28,7 +28,8 @@ export default function LeagueSelectModalContent({
   onPrefetch,
 }: LeagueSelectModalContentProps) {
   return (
-    <S.Dialog
+    <dialog
+      className={styles['dialog']}
       ref={dialogRef}
       onMouseDown={e => {
         if (e.target === e.currentTarget) {
@@ -37,27 +38,29 @@ export default function LeagueSelectModalContent({
       }}
       onClose={closeModal}
     >
-      <S.Container onClick={e => e.stopPropagation()}>
-        <S.Title>Select League you want</S.Title>
-        <S.BoxContainer>
+      <div className={styles['container']} onClick={e => e.stopPropagation()}>
+        <h1 className={styles['title']}>Select League you want</h1>
+        <div>
           {leagueList.map(league => (
-            <S.Box
+            <div
+              className={styles['box']}
               key={`league-${league.name}`}
               onClick={() => setLeagueRange(league)}
               onMouseEnter={() => onPrefetch(league.id)}
               aria-label={`${league.name} 리그 선택 버튼`}
             >
-              <S.Emblem
+              <img
+                className={styles['emblem']}
                 src={league.emblem.src}
                 width='70'
                 height='70'
                 alt={`${league.name} emblem image`}
               />
-              <S.Span>PL</S.Span>
-            </S.Box>
+              <span className={styles['text']}>PL</span>
+            </div>
           ))}
-        </S.BoxContainer>
-      </S.Container>
-    </S.Dialog>
+        </div>
+      </div>
+    </dialog>
   )
 }

@@ -1,4 +1,6 @@
-import * as S from './LeagueSelectModal.style'
+'use client'
+
+import styles from './LeagueSelectModalTrigger.module.css'
 
 export default function LeagueSelectModalTrigger({
   openModal,
@@ -6,12 +8,13 @@ export default function LeagueSelectModalTrigger({
   openModal: () => void
 }) {
   return (
-    <S.Button
+    <button
+      className={styles['btn']}
       type='button'
       onClick={openModal}
       aria-labelledby='cover-game-heading'
     >
-      <S.ButtonLabel>Game Start</S.ButtonLabel>
-    </S.Button>
+      <span className={styles['btn-label']}>Game Start</span>
+    </button>
   )
 }

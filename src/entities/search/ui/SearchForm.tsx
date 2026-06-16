@@ -3,8 +3,8 @@
 import { type IHint } from '@/shared'
 import type { IFirebasePlayer } from '@common/model'
 import AutoSearchList from './AutoSearchList'
-import * as S from './SearchForm.style'
 import useSearch from '../model/useSearch'
+import styles from './SearchForm.module.css'
 
 interface IForm {
   quiz: IFirebasePlayer
@@ -24,9 +24,10 @@ function SearchForm({ quiz, disabled, setIsCorrect, setHintArr }: IForm) {
   } = useSearch({ quiz, setIsCorrect, setHintArr, disabled })
 
   return (
-    <S.Form role='search'>
-      <S.InputWrap>
-        <S.Input
+    <div className={styles['form']} role='search'>
+      <div className={styles['input-wrap']}>
+        <input
+          className={styles['input']}
           name='search'
           disabled={disabled}
           onKeyDown={onKeyDown}
@@ -42,8 +43,8 @@ function SearchForm({ quiz, disabled, setIsCorrect, setHintArr }: IForm) {
           handleSelect={handleSelect}
           focusedIndex={focusedIndex}
         />
-      </S.InputWrap>
-    </S.Form>
+      </div>
+    </div>
   )
 }
 

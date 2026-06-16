@@ -1,8 +1,9 @@
 'use client'
 
 import { memo } from 'react'
+import clsx from 'clsx'
 
-import * as S from './Club.style'
+import styles from './Club.module.css'
 
 interface ClubProps {
   logo: string
@@ -24,14 +25,21 @@ const Club = ({
   children,
 }: ClubProps) => {
   return (
-    <S.Container
-      $isActive={isActive}
+    <div
+      className={clsx(styles['container'], isActive && styles['active'])}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <S.Emblem src={logo} alt={name} ref={emblemRef} width='60' height='60' />
+      <img
+        className={styles['emblem']}
+        src={logo}
+        alt={name}
+        ref={emblemRef}
+        width='60'
+        height='60'
+      />
       {children}
-    </S.Container>
+    </div>
   )
 }
 

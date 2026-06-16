@@ -1,13 +1,13 @@
 'use client'
+import clsx from 'clsx'
 
-import { Position, type IFirebasePlayer } from '@common/model'
-import * as S from './HintBox.style'
-import type { IHint } from '@/shared'
-import { getHintColumns, type HintColumnDef } from '../model/getHintColumns'
+import { Position } from '@common/model'
+import { type HintColumnDef } from '../model/getHintColumns'
+import styles from './HintUI.module.css'
 
 interface HintRowProps {
   children: React.ReactNode
-  value: boolean
+  isEqual: boolean
   label: string
 }
 interface ClubEmblemProps {
@@ -28,11 +28,16 @@ interface PositionUIProps {
   position: keyof typeof Position
 }
 
-interface HintListProps {
-  hintArr: IHint[]
-}
 function ClubEmblem({ src, alt, width, height }: ClubEmblemProps) {
-  return <S.ClubEmblem src={src} alt={alt} width={width} height={height} />
+  return (
+    <img
+      className={styles['emblem']}
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+    />
+  )
 }
 
 function PositionUI({ position }: PositionUIProps) {
@@ -55,14 +60,19 @@ function Age({ aAge, qAge }: AgeProps) {
   )
 }
 
-function HintRow({ children, value, label }: HintRowProps) {
+function HintRow({ children, isEqual, label }: HintRowProps) {
   return (
-    <S.Hint $isEqual={value}>
+    <div
+      className={clsx(
+        styles['hint'],
+        isEqual ? styles['equal'] : styles['not-equal'],
+      )}
+    >
       {children}
-      <S.Label>
+      <label className={styles['label']}>
         <span>{label}</span>
-      </S.Label>
-    </S.Hint>
+      </label>
+    </div>
   )
 }
 
@@ -88,27 +98,10 @@ function HintCell({ kind, quiz, answer }: HintColumnDef) {
 
 function HintColumn({ def }: { def: HintColumnDef }) {
   return (
-    <HintRow value={def.isEqual} label={def.label}>
+    <HintRow isEqual={def.isEqual} label={def.label}>
       {HintCell(def)}
     </HintRow>
   )
 }
 
-function HintList({ hintArr }: HintListProps) {
-  return (
-    <S.HintList>
-      {hintArr.map(({ q, a }) => (
-        <S.HintItem key={a.id}>
-          <S.MyAnswer>{a.name}</S.MyAnswer>
-          <S.Row>
-            {getHintColumns(q, a).map(def => (
-              <HintColumn key={def.label} def={def} />
-            ))}
-          </S.Row>
-        </S.HintItem>
-      ))}
-    </S.HintList>
-  )
-}
-
-export { ClubEmblem, PositionUI, BackNumber, Age, HintRow, HintList }
+export { HintColumn }

@@ -1,8 +1,5 @@
-'use client'
-
-import styled from 'styled-components'
-
-const Form = styled.div`
+/* const Form = styled.div` */
+.form {
   position: relative;
   width: 100%;
   display: flex;
@@ -10,16 +7,18 @@ const Form = styled.div`
   justify-content: center;
   align-items: center;
   gap: 10px;
-`
+}
 
-const InputWrap = styled.div`
+/* const InputWrap = styled.div` */
+.input-wrap {
   position: relative;
   width: 100%;
   display: flex;
   justify-content: center;
-`
+}
 
-const Input = styled.input`
+/* const Input = styled.input` */
+.input {
   width: 70%;
   height: 35px;
   border: 1.3px solid #3b3b3b;
@@ -29,13 +28,11 @@ const Input = styled.input`
   outline: none;
   padding-left: 10px;
   border-radius: 5px;
-  &::placeholder {
-    color: #979dac;
-  }
-  &:disabled {
-    background-color: rgba(195, 195, 195, 0.5);
-    cursor: not-allowed;
-  }
-`
-
-export { Form, InputWrap, Input }
+}
+.input::placeholder {
+  color: #979dac;
+}
+.input:disabled {
+  background-color: rgba(195, 195, 195, 0.5);
+  cursor: not-allowed;
+}

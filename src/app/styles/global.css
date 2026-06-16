@@ -17,6 +17,9 @@
   --color-header-banner: var(--color-accent);
   --color-header-label: #000000;
   --color-border-subtle: rgba(255, 255, 255, 0.12);
+
+  --color-equal: #06d6a0;
+  --color-not-equal: #8b8c89;
 }
 
 * {

@@ -20,18 +20,18 @@
 
 ### styled-components → CSS Modules 진행률
 
-**3 / 15 (20%)** — `app/` 라우트 셸·홈·404 완료. submission·entities·club 등은 위젯 단위로 추후 전환.
+**8 / 15 (53%)** — `app/` 셸·홈·404 + `entities/*/ui` 완료. `widget/`·submission 잔여.
 
 | 상태 | 대상 | 파일 |
 | ---- | ---- | ---- |
 | ✅ | `shared/ui/layout/Header` | `Header.module.css` — 반응형 `@media`, `useBreakpoint` 제거 |
 | ✅ | `widget/home/CoverView` | `CoverView.module.css` |
 | ✅ | `widget/not-found/NotFoundView` | `not-found.module.css` (`not-found.style.ts` 삭제) |
-| ⬜ | `entities/league/LeagueSelectModal` | `LeagueSelectModal.style.tsx` |
-| ⬜ | `entities/club/Club` | `Club.style.ts` |
-| ⬜ | `entities/search/AutoSearch` | `AutoSearch.style.ts` |
-| ⬜ | `entities/search/SearchForm` | `SearchForm.style.ts` |
-| ⬜ | `entities/search/HintBox` | `HintBox.style.ts` |
+| ✅ | `entities/league/LeagueSelectModal` | `LeagueSelectModal.module.css`, `LeagueSelectModalTrigger.module.css` |
+| ✅ | `entities/club/Club` | `Club.module.css` |
+| ✅ | `entities/search/AutoSearchList` | `AutoSearchList.module.css` |
+| ✅ | `entities/search/SearchForm` | `SearchForm.module.css` |
+| ✅ | `entities/search/HintList` · `HintUI` | `HintList.module.css`, `HintUI.module.css` (`HintBox`·`.style.ts` 삭제) |
 | ⬜ | `widget/club/ClubViews` | `ClubViews.style.ts` |
 | ⬜ | `widget/club/ClubSquadModal` | `ClubSquadModal.style.ts` |
 | ⬜ | `widget/submission/SubmissionGameContainer` | `SubmissionGameContainer.style.ts` |
@@ -45,7 +45,7 @@
 ### 미완료
 
 - [ ] **배포** — Vercel 프로젝트 연동 (루트 배포 시 `basePath` 불필요; 서브패스 배포 시 `next.config` `basePath` + env 검토)
-- [ ] 컴포넌트 styled-components → CSS Modules — **3/15 (20%)**, 상세는 위 표
+- [ ] 컴포넌트 styled-components → CSS Modules — **8/15 (53%)**, 상세는 위 표
 - [ ] `ThemeProvider` / `StyledComponentsRegistry` / `styled-components` 의존성 제거
 - [ ] `styled-reset` 패키지 제거 (GlobalStyle 삭제 후 미사용)
 

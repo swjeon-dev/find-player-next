@@ -2,7 +2,7 @@
 
 import { useRecoilValue } from 'recoil'
 
-import { SearchForm, HintBox } from '@/entities/search'
+import { HintList, SearchForm } from '@/entities/search'
 import { quizState } from '../model'
 import ChangeButton from './ChangeButton'
 import { useSubmissionGame } from '../model'
@@ -63,7 +63,7 @@ const SubmissionCard = ({
         )}
       </S.FormContainer>
 
-      <HintBox hintArr={hintArr} />
+      <HintList hintArr={hintArr} />
       <ChangeButton onClick={changeQuiz} />
     </div>
   )

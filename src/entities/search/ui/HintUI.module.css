@@ -1,0 +1,43 @@
+.hint {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border: 2px solid white;
+  border-radius: 30%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 23px;
+  font-weight: bold;
+}
+.equal {
+  background-color: var(--color-equal);
+}
+.not-equal {
+  background-color: var(--color-not-equal);
+}
+
+.label {
+  position: absolute;
+  margin-top: 10px;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  padding: 5px 10px;
+  border-radius: 10px;
+  color: black;
+  background-color: white;
+  box-shadow: 0px 2px 5px var(--color-not-equal);
+  display: flex;
+  align-items: center;
+}
+.label > span {
+  font-size: small;
+}
+
+.emblem {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+}

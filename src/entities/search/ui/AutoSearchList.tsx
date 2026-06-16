@@ -1,6 +1,8 @@
 'use client'
 
-import * as S from './AutoSearch.style'
+import clsx from 'clsx'
+
+import styles from './AutoSearchList.module.css'
 import type { IFirebasePlayer } from '@common/model'
 import { useAutocompletePaint } from '../model/useAutocomplete'
 
@@ -23,24 +25,28 @@ const AutoSearchList = ({
   if (!hasResults) return null
 
   return (
-    <S.AutoSearchBox ref={listRef}>
+    <ul className={styles['auto-search']} ref={listRef}>
       {searchingPlayers.map((player, idx) => (
-        <S.PlayerBox
+        <button
+          className={clsx(
+            styles['player-box'],
+            focusedIndex === idx && styles['selected'],
+          )}
           key={`player-${player.id}`}
           type='button'
-          $selected={focusedIndex === idx}
           onClick={() => handleSelect(player)}
         >
-          <S.ClubEmblem
+          <img
+            className={styles['emblem']}
             src={player.teamLogo || ''}
             alt={player.teamId.toString()}
             width='25'
             height='25'
           />
-          <S.Name>{player.name}</S.Name>
-        </S.PlayerBox>
+          <span className={styles['player-name']}>{player.name}</span>
+        </button>
       ))}
-    </S.AutoSearchBox>
+    </ul>
   )
 }
 
