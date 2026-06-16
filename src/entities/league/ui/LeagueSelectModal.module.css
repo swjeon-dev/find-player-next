@@ -2,13 +2,13 @@
   width: 80%;
   max-width: 500px;
   height: 280px;
-  background-color: #6b7280;
+  background-color: var(--color-modal-bg);
   padding: 0;
   border: none;
   border-radius: 12px;
 }
 .dialog::backdrop {
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--color-backdrop);
 }
 
 .container {
@@ -23,7 +23,7 @@
 
 .text,
 .title {
-  color: rgb(255, 255, 255);
+  color: var(--color-text);
   font-weight: bold;
 }
 .title {
@@ -39,7 +39,7 @@
   padding: 5px 0;
 }
 .box:hover {
-  border: 1px solid white;
+  border: 1px solid var(--color-text);
   border-radius: 15px;
   cursor: pointer;
 }

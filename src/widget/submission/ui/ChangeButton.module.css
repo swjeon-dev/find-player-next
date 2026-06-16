@@ -1,0 +1,18 @@
+.alert-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+
+  font-size: 15px;
+  background: var(--color-change-btn);
+  box-shadow: 0 2px var(--color-change-btn-shadow);
+  color: var(--color-text);
+  padding: 0.5em 0.8em;
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  cursor: pointer;
+}

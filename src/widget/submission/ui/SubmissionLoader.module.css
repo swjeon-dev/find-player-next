@@ -1,0 +1,44 @@
+.container {
+  position: relative;
+  width: 500px;
+  min-height: 300px;
+  border-radius: 15px;
+  margin-bottom: 50px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+
+  background-color: var(--color-loader-bg);
+  border-radius: 15px;
+  padding: 10px 20px;
+}
+.container div {
+  margin-bottom: 15px;
+}
+
+.container span {
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 3rem;
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: 100%;
+  }
+}
+
+.retry-button {
+  margin-top: 14px;
+  font-size: 16px;
+  background: var(--color-retry-bg);
+  color: var(--color-text-dark);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}

@@ -1,0 +1,56 @@
+.club-skeleton {
+  min-width: 70px;
+  aspect-ratio: 1/1;
+  border-radius: 25%;
+  margin: auto;
+}
+
+.tablet-toggle-button {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 101;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 2px 8px var(--color-shadow-soft);
+}
+
+.club-container {
+  grid-template-columns: repeat(3, 1fr);
+  display: grid;
+  background-color: var(--color-club-grid);
+
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  max-width: 250px;
+
+  min-height: 80px;
+  height: fit-content;
+  border-radius: 15px;
+  z-index: 31;
+}
+.loading {
+  cursor: wait;
+}
+.not-loading {
+  cursor: auto;
+}
+
+@media (max-width: 768px) {
+  .club-container {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    height: fit-content;
+    background-color: var(--color-overlay);
+    z-index: 100;
+  }
+}

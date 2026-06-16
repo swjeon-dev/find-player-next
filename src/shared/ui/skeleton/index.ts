@@ -1,1 +1,1 @@
-export { SkeletonBase } from './SkeletonBase'
+export { default as SkeletonBase } from './SkeletonBase'

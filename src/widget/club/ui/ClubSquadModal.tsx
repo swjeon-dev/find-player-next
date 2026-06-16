@@ -1,19 +1,20 @@
 'use client'
 
 import { memo, useRef } from 'react'
+import clsx from 'clsx'
 
 import {
   useFetchingTeamPlayersData,
   useModalPosition,
   useSelectPlayer,
 } from '@/entities/club'
-import * as S from './ClubSquadModal.style'
+import styles from './ClubSquadModal.module.css'
 
-function Message({ message }: { message: string; isLoading?: boolean }) {
+function Message({ message }: { message: string }) {
   return (
-    <S.Loader>
+    <li className={styles['loader']}>
       <span>{message}</span>
-    </S.Loader>
+    </li>
   )
 }
 
@@ -25,9 +26,9 @@ const Player = memo(function ({
   handleClick: (name: string) => void
 }) {
   return (
-    <S.PlayerRow onClick={() => handleClick(name)}>
-      <S.Name>{name}</S.Name>
-    </S.PlayerRow>
+    <li className={styles['player-row']} onClick={() => handleClick(name)}>
+      <span className={styles['name']}>{name}</span>
+    </li>
   )
 })
 
@@ -49,7 +50,10 @@ const ClubSquadModal = ({
   } = useFetchingTeamPlayersData(teamId)
   const listRef = useRef<HTMLUListElement>(null)
 
-  const { isReady, ...isTransfer } = useModalPosition({
+  const {
+    isReady,
+    isTransfer: { x, y },
+  } = useModalPosition({
     listRef,
     parentRef,
     triggerKey: teamId,
@@ -59,7 +63,20 @@ const ClubSquadModal = ({
 
   return (
     <>
-      <S.PlayerList ref={listRef} $isTransfer={isTransfer} $isVisible={isReady}>
+      <ul
+        className={clsx(
+          styles['player-list'],
+          isReady ? styles['visible'] : styles['hidden'],
+          x && y
+            ? styles['translate-xy']
+            : x
+              ? styles['translate-x']
+              : y
+                ? styles['translate-y']
+                : styles['translate-none'],
+        )}
+        ref={listRef}
+      >
         {isPending ? (
           <Message message='Loading...' />
         ) : error || !players?.length ? (
@@ -73,7 +90,7 @@ const ClubSquadModal = ({
             />
           ))
         )}
-      </S.PlayerList>
+      </ul>
     </>
   )
 }

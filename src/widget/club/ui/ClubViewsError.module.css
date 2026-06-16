@@ -1,0 +1,22 @@
+.error-box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  height: 140px;
+  padding: 10px;
+  border-radius: 12px;
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+  font-size: 0.85rem;
+}
+
+.retry-button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--color-error);
+  color: var(--color-text);
+}

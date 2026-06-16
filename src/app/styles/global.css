@@ -20,6 +20,42 @@
 
   --color-equal: #06d6a0;
   --color-not-equal: #8b8c89;
+
+  --color-card: white;
+  --color-text-dark: #1a1a1a;
+  --color-on-light: black;
+
+  --color-border-strong: #3b3b3b;
+  --color-border-muted: rgba(59, 59, 59, 0.4);
+  --color-placeholder: #979dac;
+  --color-input-disabled: rgba(195, 195, 195, 0.5);
+  --color-muted-text: rgba(59, 59, 59, 0.5);
+  --color-selected-border: black;
+  --color-shadow-drop: black;
+  --color-shadow-soft: rgba(0, 0, 0, 0.25);
+
+  --color-modal-bg: #6b7280;
+  --color-backdrop: rgba(0, 0, 0, 0.7);
+  --color-cover-trigger: red;
+
+  --color-club-grid: #8ecae6;
+  --color-overlay: rgba(0, 0, 0, 0.8);
+
+  --color-squad-border: grey;
+  --color-squad-row: #ebebeb;
+  --color-squad-row-alt: #c0c0c0;
+  --color-muted: gray;
+
+  --color-error-bg: #ffdddd;
+  --color-error: #b00020;
+
+  --color-loader-bg: skyblue;
+  --color-change-btn: rgb(65 105 225 / 62%);
+  --color-change-btn-shadow: #4169e1;
+  --color-retry-bg: rgb(255 255 255 / 92%);
+
+  --color-skeleton: #eee;
+  --color-skeleton-shine: #c5c4c4f6;
 }
 
 * {

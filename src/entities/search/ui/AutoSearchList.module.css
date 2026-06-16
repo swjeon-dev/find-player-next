@@ -7,10 +7,10 @@ ul.auto-search {
   width: 70%;
   max-height: 200px;
   overflow-y: auto;
-  color: red;
+  color: var(--color-cover-trigger);
   margin: 0 auto;
-  border: 1.3px solid rgba(59, 59, 59, 0.4);
-  background-color: white;
+  border: 1.3px solid var(--color-border-muted);
+  background-color: var(--color-card);
   border-radius: 0 0 5px 5px;
 }
 
@@ -19,13 +19,13 @@ ul.auto-search {
   height: 35px;
   font-size: 15px;
   font-weight: bold;
-  color: rgba(59, 59, 59, 0.5);
+  color: var(--color-muted-text);
   display: flex;
   align-items: center;
   gap: 10px;
   padding-left: 10px;
-  background-color: white;
-  box-shadow: 0px 3px 12px black;
+  background-color: var(--color-card);
+  box-shadow: 0px 3px 12px var(--color-shadow-drop);
   border-color: transparent;
 }
 .player-box:hover {
@@ -33,7 +33,7 @@ ul.auto-search {
 }
 
 .selected {
-  border: 2px solid black;
+  border: 2px solid var(--color-selected-border);
 }
 
 .emblem {
