@@ -2,16 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { StaticImageData } from 'next/image'
 
 import { ROUTER_PATH } from '@/shared'
+import type { LeagueListItem } from './league.constants'
 import { useLeagueInfoStore } from './league.store'
-
-export interface LeagueListItem {
-  name: string
-  id: number
-  emblem: StaticImageData
-}
 
 export default function useLeagueSelectModal() {
   const [isOpen, setIsOpen] = useState(false)
@@ -28,7 +22,7 @@ export default function useLeagueSelectModal() {
     setIsOpen(false)
   }, [])
 
-  const setLeagueRange = useCallback(
+  const selectLeague = useCallback(
     (league: LeagueListItem) => {
       setId(league.id)
       router.push(ROUTER_PATH.SUBMISSION)
@@ -50,6 +44,6 @@ export default function useLeagueSelectModal() {
     dialogRef,
     openModal,
     closeModal,
-    setLeagueRange,
+    selectLeague,
   }
 }

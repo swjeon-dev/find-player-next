@@ -1,30 +1,22 @@
 'use client'
 
-import { createPortal } from 'react-dom'
-
 import useLeagueSelectModal from '../model/useLeagueSelectModal'
-import usePrefetchLeagueData from '../model/usePrefetchLeagueData'
 import LeagueSelectModalContent from './LeagueSelectModalContent'
 import LeagueSelectModalTrigger from './LeagueSelectModalTrigger'
 
 function LeagueSelectModal() {
-  const { isOpen, dialogRef, openModal, closeModal, setLeagueRange } =
+  const { isOpen, dialogRef, openModal, closeModal, selectLeague } =
     useLeagueSelectModal()
-  const { prefetchingLeagueData } = usePrefetchLeagueData()
 
   return (
     <>
-      <LeagueSelectModalTrigger openModal={openModal} />
-      {isOpen &&
-        createPortal(
-          <LeagueSelectModalContent
-            dialogRef={dialogRef}
-            closeModal={closeModal}
-            setLeagueRange={setLeagueRange}
-            onPrefetch={prefetchingLeagueData}
-          />,
-          document.getElementById('modal-root') as HTMLElement,
-        )}
+      <LeagueSelectModalTrigger onOpen={openModal} />
+      <LeagueSelectModalContent
+        isOpen={isOpen}
+        dialogRef={dialogRef}
+        onClose={closeModal}
+        onSelectLeague={selectLeague}
+      />
     </>
   )
 }

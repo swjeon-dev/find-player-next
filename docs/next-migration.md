@@ -58,6 +58,13 @@
 
 - [ ] **배포** — Vercel 프로젝트 연동 (루트 배포 시 `basePath` 불필요; 서브패스 배포 시 `next.config` `basePath` + env 검토)
 
+### 선택 (Next 서버 이점) — §9
+
+- [ ] cookie + submission 서버 prefetch · dehydrate
+- [ ] middleware 가드 (ProtectedRoute 보완)
+- [ ] Route Handler + `revalidate` (BFF·캐시)
+- [ ] Server / Client UI 분리 (정적 셸)
+
 ---
 
 ## 1. Next 설치
@@ -711,3 +718,52 @@ playersId (RQ) ──sync effect──▶ selectedPlayerId (Zustand persist)
 #### 결론
 
 **Recoil → Zustand 전환 및 quiz store 분리는 완료**입니다. 남은 항목은 quiz SSR 패턴 통일 등 **선택적 개선**이며, 배포·동작을 막는 미완료 항목은 없습니다.
+
+## 9. Next 서버 이점 — 현재 한계와 활용 방향
+
+> **현재:** 데이터 fetch는 클라이언트 axios → Firebase RTDB. Next는 **라우팅·metadata·빌드·배포 셸** 역할이 중심.
+
+### 9-1. 지금 구조
+
+```text
+사용자 리그 선택 (Zustand · sessionStorage)
+  → leagueId 확정
+    → React Query fetch (팀/선수 ID · 선수 상세)
+      → hover prefetch (usePrefetchLeagueData)
+```
+
+| 계층 | 역할 |
+| ---- | ---- |
+| **Next `<Link>` prefetch** | 라우트 JS/RSC 페이로드 (데이터 아님) |
+| **React Query `prefetchQuery`** | API 응답 → `QueryClient` 캐시 (`Providers` 하위 client navigation 유지) |
+| **RQ persist** | `queryKey[0] === 'persist'` → localStorage 24h |
+
+**서버가 leagueId를 모르는 이유:** `sessionStorage`는 브라우저 전용 → SSR/RSC 시점에 접근 불가.  
+→ **첫 방문·리그 선택 전**에는 Next 서버 fetch/SSG 이점이 거의 없음 (Vite SPA와 유사).
+
+hover prefetch는 Next 한계가 아니라 **RQ 클라이언트 캐시** 패턴이라 Next에서도 유효.
+
+### 9-2. 서버 이점을 쓰려면
+
+관문: **서버가 leagueId를 알게 만들 것** (cookie, URL param, middleware).
+
+| 방향 | 개요 | 기대 효과 |
+| ---- | ---- | --------- |
+| **cookie + submission Server prefetch** | 리그 선택 시 cookie 저장 → `/submission` RSC에서 fetch → RQ `dehydrate` | 재방문·직링크 시 첫 paint 단축 |
+| **middleware 가드** | cookie 없으면 `/` redirect (HTML 전) | `ProtectedRoute` null 깜빡임 감소 |
+| **Route Handler + `revalidate`** | RTDB 조회를 `app/api/...` + 서버 캐시 | RTDB hit 감소, BFF·rate limit 여지 |
+| **Server / Client UI 분리** | Cover·Header 정적 부분 RSC, modal·퀴즈는 client island | JS 번들·hydration 비용 감소 |
+| **Server Actions** | 리그 선택 시 `cookies().set` + `redirect` | cookie 패턴과 자연스럽게 연결 |
+
+**클라이언트 유지가 맞는 것:** prefix 자동완성, 퀴즈·정답 처리, hover prefetch, 입력 state.
+
+### 9-3. 추천 순서 (미적용 · 선택)
+
+```text
+1. Server UI 분리 (비용 낮음)
+2. cookie + middleware 가드
+3. cookie + submission Server prefetch + dehydrate
+4. Route Handler + revalidate
+```
+
+현재 PL(id: 39) 단일 리그면 (3)을 cookie 없이 서버 기본값으로 단순화할 수 있으나, 멀티 리그 확장 시 cookie 패턴 권장.
