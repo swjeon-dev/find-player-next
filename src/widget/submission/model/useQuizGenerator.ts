@@ -1,13 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 
 import {
   useLeagueInfoStore,
   useFetchingPlayersIdInLeague,
 } from '@/entities/league'
-import { useQuizStore } from './quiz.store'
+import type { IFirebasePlayer } from '@common/model'
 
+import { useQuizStore } from './quiz.store'
 import useFetchingPlayerData from './useFetchingPlayerData'
 
 const MAX_RANDOM_TRIES = 100
@@ -39,14 +40,11 @@ const useQuizGenerator = (): {
   isChangingQuiz: boolean
   quizError: Error | null
   refetchQuiz: () => void
+  player: IFirebasePlayer | undefined
 } => {
   const leagueId = useLeagueInfoStore(state => state.id)
-  const quiz = useQuizStore(state => state.quiz)
-  const setQuiz = useQuizStore(state => state.setQuiz)
-
-  const [pickedPlayerId, setPickedPlayerId] = useState<number | null>(
-    () => quiz?.id ?? null,
-  )
+  const quizPlayerId = useQuizStore(state => state.selectedPlayerId)
+  const setQuizPlayerId = useQuizStore(state => state.setSelectedPlayerId)
 
   const { playersId } = useFetchingPlayersIdInLeague({
     leagueId,
@@ -59,41 +57,28 @@ const useQuizGenerator = (): {
     refetch: refetchQuiz,
     player,
   } = useFetchingPlayerData({
-    playerId: pickedPlayerId ?? 0,
-    enabled:
-      pickedPlayerId != null &&
-      pickedPlayerId > 0 &&
-      !!leagueId &&
-      !!playersId?.length,
+    playerId: quizPlayerId,
+    enabled: quizPlayerId != null && !!leagueId && !!playersId?.length,
   })
 
-  // 다음 퀴즈 플레이어 ID 선택 및 선택된 플레이어 ID 저장
   useEffect(() => {
     if (!playersId?.length) {
-      setPickedPlayerId(null)
+      setQuizPlayerId(null)
       return
     }
 
-    setPickedPlayerId(prev => {
-      if (prev != null && playersId.includes(prev)) return prev
-      const next = pickNextQuizPlayerId(playersId, null)
-      return next ?? prev
-    })
-  }, [playersId])
+    if (quizPlayerId != null && playersId.includes(quizPlayerId)) return
 
-  // 선택된 플레이어 데이터 설정
-  useEffect(() => {
-    if (!player) return
-    setQuiz(player)
-  }, [player, setQuiz])
+    const nextPlayerId = pickNextQuizPlayerId(playersId, null)
+    if (nextPlayerId != null) setQuizPlayerId(nextPlayerId)
+  }, [playersId, quizPlayerId, setQuizPlayerId])
 
-  // 다음 퀴즈 생성
   const generateQuiz = useCallback(() => {
     if (!playersId?.length) return
 
-    const next = pickNextQuizPlayerId(playersId, quiz?.id)
-    if (next != null) setPickedPlayerId(next)
-  }, [playersId, quiz?.id])
+    const next = pickNextQuizPlayerId(playersId, quizPlayerId)
+    if (next != null) setQuizPlayerId(next)
+  }, [playersId, quizPlayerId, setQuizPlayerId])
 
   return {
     generateQuiz,
@@ -101,6 +86,7 @@ const useQuizGenerator = (): {
     isChangingQuiz,
     quizError,
     refetchQuiz,
+    player,
   }
 }
 

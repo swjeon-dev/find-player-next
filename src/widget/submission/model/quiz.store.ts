@@ -1,24 +1,21 @@
-// TODO(refactor): quiz: IFirebasePlayer → playerId, 선수 데이터는 React Query로 분리
 'use client'
 
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-import type { IFirebasePlayer } from '@common/model'
-
-interface QuizPlayer {
-  quiz: IFirebasePlayer | undefined
-  setQuiz: (quiz: IFirebasePlayer) => void
+interface QuizPlayerId {
+  selectedPlayerId: number | null
+  setSelectedPlayerId: (selectedPlayerId: number | null) => void
 }
 
-const useQuizStore = create<QuizPlayer>()(
+const useQuizStore = create<QuizPlayerId>()(
   persist(
     set => ({
-      quiz: undefined,
-      setQuiz: quiz => set({ quiz }),
+      selectedPlayerId: null,
+      setSelectedPlayerId: selectedPlayerId => set({ selectedPlayerId }),
     }),
     {
-      name: 'quiz-player',
+      name: 'quiz-player-id',
       storage: createJSONStorage(() => sessionStorage),
     },
   ),

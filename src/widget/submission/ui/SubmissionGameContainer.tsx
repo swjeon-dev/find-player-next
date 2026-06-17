@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
-
 import { useQuizGenerator } from '../model'
 import SubmissionCard from './SubmissionCard'
 import { SubmissionLoader } from './SubmissionLoader'
@@ -14,11 +12,8 @@ function SubmissionGameContainer() {
     isChangingQuiz,
     quizError,
     refetchQuiz,
+    player,
   } = useQuizGenerator()
-
-  useEffect(() => {
-    generateQuiz()
-  }, [])
 
   const retryFetching = () => {
     refetchQuiz()
@@ -36,6 +31,7 @@ function SubmissionGameContainer() {
   return (
     <div className={styles['container']} role='quiz-container'>
       <SubmissionCard
+        player={player}
         isGeneratingQuiz={isGeneratingQuiz}
         isChangingQuiz={isChangingQuiz}
         generateQuiz={generateQuiz}
