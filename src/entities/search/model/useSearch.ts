@@ -1,12 +1,11 @@
 'use client'
 
-import { useRecoilState } from 'recoil'
-
-import { inputState } from './inputState'
 import { useDebouncedValue, type IHint } from '@/shared'
 import type { IFirebasePlayer } from '@common/model'
+
 import { useAutocompleteListFocus } from './useAutocomplete'
 import { useFilteringPlayersName } from './useFilteringPlayersName'
+import { useInputStore } from './input.store'
 
 interface IUseSearchProps {
   quiz: IFirebasePlayer
@@ -20,7 +19,8 @@ export default function useSearch({
   setHintArr,
   disabled,
 }: IUseSearchProps) {
-  const [value, setValue] = useRecoilState(inputState)
+  const value = useInputStore(state => state.value)
+  const setValue = useInputStore(state => state.setValue)
   const debouncedValue = useDebouncedValue(value, 500)
   const { focusedIndex, setFocusedIndex } =
     useAutocompleteListFocus(debouncedValue)

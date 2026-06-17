@@ -1,2 +1,2 @@
 export { useFilteringPlayersName } from './useFilteringPlayersName'
-export { inputState } from './inputState'
+export { useInputStore } from './input.store'

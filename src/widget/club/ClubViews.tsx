@@ -1,24 +1,22 @@
 'use client'
 
-import { useRecoilValue } from 'recoil'
-
 import { useClubTabletPanel } from '@/entities/club'
 import {
-  leagueInfoState,
   useFetchingTeamsDataInLeague,
+  useLeagueInfoStore,
 } from '@/entities/league'
 
 import ClubViewsError from './ui/ClubViewsError'
 import ClubViewsContent from './ui/ClubViewsContent'
 
 function ClubViews() {
-  const leagueInfo = useRecoilValue(leagueInfoState)
+  const leagueId = useLeagueInfoStore(state => state.id)
   const { teamIdsQuery, teamDatasQuery } = useFetchingTeamsDataInLeague(
-    leagueInfo.id ?? 0,
+    leagueId ?? 0,
   )
   const tabletPanel = useClubTabletPanel()
 
-  if (!leagueInfo.id) return null
+  if (!leagueId) return null
 
   if (teamIdsQuery.error) {
     return <ClubViewsError onRetry={() => teamIdsQuery.refetch()} />

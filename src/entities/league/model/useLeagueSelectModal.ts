@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSetRecoilState } from 'recoil'
 import type { StaticImageData } from 'next/image'
 
 import { ROUTER_PATH } from '@/shared'
-import { leagueInfoState } from './leagueInfoState'
+import { useLeagueInfoStore } from './league.store'
 
 export interface LeagueListItem {
   name: string
@@ -18,7 +17,7 @@ export default function useLeagueSelectModal() {
   const [isOpen, setIsOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const router = useRouter()
-  const setLeagueInfo = useSetRecoilState(leagueInfoState)
+  const setId = useLeagueInfoStore(state => state.setId)
 
   const openModal = useCallback(() => {
     setIsOpen(true)
@@ -31,10 +30,10 @@ export default function useLeagueSelectModal() {
 
   const setLeagueRange = useCallback(
     (league: LeagueListItem) => {
-      setLeagueInfo({ id: league.id })
+      setId(league.id)
       router.push(ROUTER_PATH.SUBMISSION)
     },
-    [router, setLeagueInfo],
+    [router, setId],
   )
 
   useEffect(() => {

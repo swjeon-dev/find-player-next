@@ -1,13 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useRecoilState, useRecoilValue } from 'recoil'
 
 import {
-  leagueInfoState,
+  useLeagueInfoStore,
   useFetchingPlayersIdInLeague,
 } from '@/entities/league'
-import { quizState } from './quizState'
+import { useQuizStore } from './quiz.store'
 
 import useFetchingPlayerData from './useFetchingPlayerData'
 
@@ -41,12 +40,13 @@ const useQuizGenerator = (): {
   quizError: Error | null
   refetchQuiz: () => void
 } => {
-  const leagueInfo = useRecoilValue(leagueInfoState)
-  const [quiz, setQuiz] = useRecoilState(quizState)
+  const leagueId = useLeagueInfoStore(state => state.id)
+  const quiz = useQuizStore(state => state.quiz)
+  const setQuiz = useQuizStore(state => state.setQuiz)
 
-  const [pickedPlayerId, setPickedPlayerId] = useState<number | null>(null)
-
-  const leagueId = leagueInfo.id ?? 0
+  const [pickedPlayerId, setPickedPlayerId] = useState<number | null>(
+    () => quiz?.id ?? null,
+  )
 
   const { playersId } = useFetchingPlayersIdInLeague({
     leagueId,
@@ -63,7 +63,7 @@ const useQuizGenerator = (): {
     enabled:
       pickedPlayerId != null &&
       pickedPlayerId > 0 &&
-      !!leagueInfo.id &&
+      !!leagueId &&
       !!playersId?.length,
   })
 

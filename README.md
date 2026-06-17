@@ -28,7 +28,7 @@
 
 ## 기술 스택
 
-React · TypeScript · Vite · Styled Components · React Query · Recoil · Firebase · GitHub Actions
+React · TypeScript · Next.js · CSS Modules · React Query · Zustand · Firebase · GitHub Actions
 
 ## 실행
 

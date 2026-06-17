@@ -1,12 +1,11 @@
 'use client'
 
 import { useCallback, useLayoutEffect, useState } from 'react'
-import { useSetRecoilState } from 'recoil'
 
-import { inputState } from '@/entities/search'
+import { useInputStore } from '@/entities/search'
 
 export const useSelectPlayer = (cb: () => void) => {
-  const setValue = useSetRecoilState(inputState)
+  const setValue = useInputStore(state => state.setValue)
 
   return useCallback(
     (name: string) => {

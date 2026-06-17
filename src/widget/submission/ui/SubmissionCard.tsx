@@ -1,15 +1,14 @@
 'use client'
 
-import { useRecoilValue } from 'recoil'
+import clsx from 'clsx'
 
 import { HintList, SearchForm } from '@/entities/search'
-import { quizState } from '../model'
+import { SkeletonBase } from '@/shared'
+
+import { useQuizStore } from '../model'
 import ChangeButton from './ChangeButton'
 import { useSubmissionGame } from '../model'
-
 import styles from './SubmissionCard.module.css'
-import { SkeletonBase } from '@/shared'
-import clsx from 'clsx'
 
 interface SubmissionCardProps {
   isGeneratingQuiz: boolean
@@ -22,7 +21,7 @@ const SubmissionCard = ({
   isChangingQuiz,
   generateQuiz,
 }: SubmissionCardProps) => {
-  const quiz = useRecoilValue(quizState)
+  const quiz = useQuizStore(state => state.quiz)
   const { hintArr, isCorrect, setIsCorrect, setHintArr, changeQuiz } =
     useSubmissionGame({ generateQuiz })
 

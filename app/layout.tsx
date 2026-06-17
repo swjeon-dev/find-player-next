@@ -1,9 +1,9 @@
-import '@/app/styles'
+import '@/app/styles/global.css'
 
 import type { Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
-import { Header } from '@/shared/ui/layout'
+import { Header, MainContainer } from '@/shared/ui/layout'
 
 export const metadata: Metadata = {
   title: {
@@ -25,7 +25,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <Header />
-          <main>{children}</main>
+          <MainContainer>{children}</MainContainer>
         </Providers>
 
         <div id='modal-root' />

@@ -2,10 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useRecoilValue } from 'recoil'
 
 import { ROUTER_PATH } from '@/shared'
-import { leagueInfoState } from '@/entities/league'
+import { useLeagueInfoHydrated, useLeagueInfoStore } from '@/entities/league'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -13,19 +12,22 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter()
-  const leagueInfo = useRecoilValue(leagueInfoState)
+  const hydrated = useLeagueInfoHydrated()
+  const leagueId = useLeagueInfoStore(state => state.id)
 
-  const canAccess =
-    process.env.NEXT_PUBLIC_LHCI === 'true' || Boolean(leagueInfo.id)
+  const isLhci = process.env.NEXT_PUBLIC_LHCI === 'true'
+  const canAccess = isLhci || Boolean(leagueId)
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_LHCI === 'true') return
-    if (!leagueInfo.id) {
+    if (!hydrated) return
+    if (isLhci) return
+    if (!leagueId) {
       alert('먼저 리그를 선택해주세요.')
       router.replace(ROUTER_PATH.HOME)
     }
-  }, [leagueInfo.id, router])
+  }, [hydrated, isLhci, leagueId, router])
 
+  if (!hydrated) return null
   if (!canAccess) return null
 
   return <>{children}</>

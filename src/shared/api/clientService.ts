@@ -51,6 +51,7 @@ export const fetchTeamPlayerIds = async (teamId: number): Promise<number[]> => {
 export const fetchPlayerIdsInLeague = async (
   leagueId: number,
 ): Promise<number[]> => {
+  if (!leagueId) return []
   const url = FIREBASE_API_ENDPOINT.LEAGUE_PLAYER_IDS(leagueId)
 
   return await fetchFirebaseData<number[]>(getFirebaseURLPath(url))
