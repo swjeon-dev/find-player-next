@@ -76,3 +76,23 @@ export const fetchLeagueTableData = async ({
     return []
   }
 }
+
+// TODO: 리그 목록 동기화 추가
+// export const fetchLeagueList = async (): Promise<IResponse[]> => {
+//   try {
+//     const response = await footballApiInstance.get(
+//       FOOTBAL_API_ENDPOINT.LEAGUE,
+//       {
+//         params: { season: '2024' },
+//       },
+//     )
+
+//     if (!response.data?.response?.length)
+//       throw new Error('리그 목록 가져오지 못했습니다.')
+
+//     return response.data?.response
+//   } catch (error) {
+//     fetchErrorLogger(error, 'externalService - fetchLeagueList')
+//     return []
+//   }
+// }
