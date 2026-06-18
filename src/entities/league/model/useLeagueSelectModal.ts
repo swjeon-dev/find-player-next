@@ -1,17 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
-import { ROUTER_PATH } from '@/shared'
+import { selectLeagueAction } from '@/entities/league/actions/selectLeagueAction'
 import type { LeagueListItem } from './league.constants'
-import { useLeagueInfoStore } from './league.store'
 
 export default function useLeagueSelectModal() {
   const [isOpen, setIsOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const router = useRouter()
-  const setId = useLeagueInfoStore(state => state.setId)
 
   const openModal = useCallback(() => {
     setIsOpen(true)
@@ -22,13 +18,9 @@ export default function useLeagueSelectModal() {
     setIsOpen(false)
   }, [])
 
-  const selectLeague = useCallback(
-    (league: LeagueListItem) => {
-      setId(league.id)
-      router.push(ROUTER_PATH.SUBMISSION)
-    },
-    [router, setId],
-  )
+  const selectLeague = useCallback((league: LeagueListItem) => {
+    selectLeagueAction(league.id)
+  }, [])
 
   useEffect(() => {
     if (!isOpen) return
