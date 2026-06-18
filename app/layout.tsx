@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
 import { Header, MainContainer } from '@/shared/ui/layout'
+import { ToastView } from '@/shared/ui'
 
 export const metadata: Metadata = {
   title: {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'up1' }],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
@@ -27,6 +28,7 @@ export default function RootLayout({
           <Header />
           <MainContainer>{children}</MainContainer>
         </Providers>
+        <ToastView />
 
         <div id='modal-root' />
       </body>
