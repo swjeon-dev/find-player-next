@@ -18,7 +18,7 @@
 - [x] app 셸 SC → CSS Modules 1차 — Header, CoverView, NotFoundView + `global.css` 색상 토큰
 - [x] 컴포넌트 SC → CSS Modules 전환 완료 (15/15) — `entities`·`widget`·`SkeletonBase`, `.module.css` 색상 `var(--color-*)` 통일
 - [x] styled-components 인프라 제거 — `ThemeProvider`, `StyledComponentsRegistry`, `compiler.styledComponents`, `styled-components`·`styled-reset`·`@types/styled-components`, `theme.ts`·`styled.d.ts` 제거; `breakpoints.ts` 분리
-- [x] Recoil → Zustand — `leagueInfo`·`quiz`·`input` store, persist·SSR hydration, `ProtectedRoute` 가드 (최종 검토 §8-7)
+- [x] Recoil → Zustand — `quiz`·`input` store, persist·SSR hydration (§8). **leagueId는 §9에서 cookie로 이전** (`league.store` 제거)
 - [x] quiz store · React Query 분리 — `selectedPlayerId` persist, 선수 데이터 RQ (§8-8)
 
 ### Recoil → Zustand 진행률
@@ -27,7 +27,7 @@
 
 | 상태 | Recoil (Before) | Zustand (After) | persist · SSR |
 | ---- | --------------- | --------------- | ------------- |
-| ✅ | `leagueInfoState` (`id: number \| null`) | `useLeagueInfoStore` (`league.store.ts`) | sessionStorage `leagueInfo` · `skipHydration` + `rehydrate()` |
+| ✅ | `leagueInfoState` (`id: number \| null`) | ~~`useLeagueInfoStore`~~ → **cookie `league-id`** (§9) | HTTP cookie · Server Action | — |
 | ✅ | `quizState` (`IFirebasePlayer \| null`) | `useQuizStore` (`quiz.store.ts`) | sessionStorage `quiz-player-id` · `selectedPlayerId`만 persist · 선수 데이터는 React Query (§8-8) |
 | ✅ | `inputState` (`string`) | `useInputStore` (`input.store.ts`) | 없음 (메모리) |
 | ✅ | `RecoilRoot` in Providers | 제거 | — |
@@ -58,12 +58,38 @@
 
 - [ ] **배포** — Vercel 프로젝트 연동 (루트 배포 시 `basePath` 불필요; 서브패스 배포 시 `next.config` `basePath` + env 검토)
 
-### 선택 (Next 서버 이점) — §9
+### Next 서버 이점 — §9 진행 현황
 
-- [ ] cookie + submission 서버 prefetch · dehydrate
-- [ ] middleware 가드 (ProtectedRoute 보완)
-- [ ] Route Handler + `revalidate` (BFF·캐시)
-- [ ] Server / Client UI 분리 (정적 셸)
+> §3·§6·§7·§8 마이그레이션과 **별도 트랙**. 본 섹션에서만 갱신합니다. 상세 가이드는 본문 **§9**.
+
+#### 완료
+
+- [x] **Server / Client UI 분리** — `CoverView` RSC, `LeagueSelectModal` client island (`widget/home`, `entities/league`)
+- [x] **submission Server prefetch + dehydrate** — `app/submission/page.tsx` (`cookies` → `fetchTeamIdsInLeague` · `fetchPlayerIdsInLeague` → `HydrationBoundary` → `SubmissionView leagueId`)
+- [x] **`LEAGUE_LIST` allowlist 상수** — `entities/league/model/league.constants.ts` (UI 공유 소스; proxy·Action 검증 연동은 미완)
+- [x] **`selectLeagueAction`** — `entities/league/actions/selectLeagueAction.ts` (cookie set + redirect)
+- [x] **리그 선택 → Server Action 연동** — `useLeagueSelectModal` → `selectLeagueAction(league.id)`
+- [x] **`league.store` 제거 · cookie 단일 source** — `leagueId`는 RSC `cookies()` → page prop (`ClubViews`, `useQuizGenerator`)
+- [x] **proxy 가드** — 프로젝트 루트 `proxy.ts` (Next 16, `export default proxy`). `/submission` cookie 없으면 `/` redirect
+- [x] **redirect flash toast** — proxy가 `toast-message` cookie set → `ToastView` (layout) read·표시·delete (`shared/config/toast.ts`)
+- [x] **`ProtectedRoute` 제거** — proxy + RSC prefetch로 대체 (`app/submission/layout.tsx` pass-through)
+
+#### 미완료
+
+- [ ] **`LEAGUE_LIST` allowlist 검증** — `selectLeagueAction` · `proxy.ts`에 invalid leagueId 차단 추가
+- [ ] **client 공용 toast** (선택) — in-app API toast (sonner 등). 현재 `ToastView`는 redirect flash 전용
+- [ ] **Route Handler + `revalidate`** (선택) — RTDB BFF·서버 캐시
+
+#### 추천 적용 순서
+
+```text
+1. Server UI 분리              ✅
+2. selectLeagueAction 연동       ✅
+3. proxy 가드 + flash toast      ✅
+4. submission prefetch + prop  ✅
+5. LEAGUE_LIST allowlist 연동  ← 다음
+6. Route Handler + revalidate (트래픽 증가 시)
+```
 
 ---
 
@@ -717,53 +743,295 @@ playersId (RQ) ──sync effect──▶ selectedPlayerId (Zustand persist)
 
 #### 결론
 
-**Recoil → Zustand 전환 및 quiz store 분리는 완료**입니다. 남은 항목은 quiz SSR 패턴 통일 등 **선택적 개선**이며, 배포·동작을 막는 미완료 항목은 없습니다.
+**Recoil → Zustand 전환 및 quiz store 분리는 완료**입니다. **leagueId는 §9에서 Zustand·sessionStorage 대신 cookie + RSC prop으로 이전**했습니다 (§8-9). 남은 항목은 quiz SSR 패턴 통일 등 **선택적 개선**이며, 배포·동작을 막는 미완료 항목은 없습니다.
 
-## 9. Next 서버 이점 — 현재 한계와 활용 방향
+### 8-9. leagueId cookie 전환 (§9 Phase 2–3, 완료)
 
-> **현재:** 데이터 fetch는 클라이언트 axios → Firebase RTDB. Next는 **라우팅·metadata·빌드·배포 셸** 역할이 중심.
+§8 시점의 `useLeagueInfoStore` + `ProtectedRoute` 패턴을 **cookie + proxy + RSC prop**으로 대체했습니다.
 
-### 9-1. 지금 구조
+| | §8 (Zustand) | §9 (cookie) |
+| -- | ------------ | ----------- |
+| leagueId 저장 | sessionStorage `leagueInfo` | HTTP cookie `league-id` |
+| 리그 선택 | `setId` + `router.push` | `selectLeagueAction` → cookie + redirect |
+| `/submission` 가드 | `ProtectedRoute` (hydration 후 client redirect + `alert`) | `proxy.ts` (Edge redirect, flash toast) |
+| submission 데이터 | client store `id` 구독 | RSC `cookies()` → `SubmissionView leagueId` prop |
 
 ```text
-사용자 리그 선택 (Zustand · sessionStorage)
-  → leagueId 확정
-    → React Query fetch (팀/선수 ID · 선수 상세)
-      → hover prefetch (usePrefetchLeagueData)
+selectLeagueAction
+  → cookie league-id
+  → redirect /submission
+
+proxy.ts (/submission)
+  → league-id 없음 → redirect / + toast-message flash cookie
+
+app/submission/page.tsx (RSC)
+  → cookies().league-id
+  → prefetch + <SubmissionView leagueId={…} />
+
+app/layout.tsx
+  → <ToastView />  (redirect flash 전용; client in-app toast는 별도 추가 예정)
 ```
+
+- `league.store.ts` · `ProtectedRoute` · `Providers` league rehydrate **제거**
+- `ToastView` + `ToastUI` — flash cookie read/delete + enter/exit animation (presentational 분리)
+
+## 9. Next 서버 이점 — 가이드 (리그 멀티 확장 전제)
+
+> **트랙:** §3·§6·§7·§8과 별도. 진행 체크는 상단 **「Next 서버 이점 — §9 진행 현황」** 에서만 갱신.
+
+### 9-1. 현재 구조
+
+```text
+홈 (RSC)
+  └─ CoverView (RSC)
+       └─ LeagueSelectModal (client)
+            → selectLeagueAction → cookie league-id + redirect /submission
+
+/submission
+  └─ proxy.ts — league-id 없으면 / redirect + toast-message flash
+  └─ page.tsx (RSC) — cookie leagueId prefetch → HydrationBoundary
+       └─ SubmissionView leagueId (client) — ClubViews · SubmissionGameContainer
+
+app/layout.tsx
+  └─ ToastView (client) — flash cookie read → ToastUI (redirect 안내 전용)
+```
+
+| 계층 | 현재 | 서버 이점 |
+| ---- | ---- | --------- |
+| `app/page.tsx` | metadata + CoverView | ✅ metadata·정적 HTML |
+| `league-id` cookie | Server Action · proxy · RSC | ✅ 서버가 leagueId 읽기 가능 |
+| `proxy.ts` | `/submission` cookie 검증 + flash toast | ✅ HTML 전 redirect, client `alert` 제거 |
+| `app/submission/page.tsx` | RSC prefetch + `leagueId` prop | ✅ cookie 유효 시 첫 paint 단축 |
+| `ToastView` | redirect flash cookie 1회 표시 | △ client read (in-app toast는 미구현) |
+| React Query | axios → Firebase RTDB | △ ID 목록 서버 prefetch, 상세·검색 client |
+| `usePrefetchLeagueData` | hover client prefetch | △ server prefetch 보완 |
+
+**관문 통과:** 서버·Edge가 `leagueId` cookie를 읽을 수 있게 되었습니다. 남은 과제는 **allowlist 검증**·선택적 BFF입니다.
 
 | 계층 | 역할 |
 | ---- | ---- |
 | **Next `<Link>` prefetch** | 라우트 JS/RSC 페이로드 (데이터 아님) |
-| **React Query `prefetchQuery`** | API 응답 → `QueryClient` 캐시 (`Providers` 하위 client navigation 유지) |
+| **React Query `prefetchQuery`** | API 응답 → `QueryClient` 캐시 |
 | **RQ persist** | `queryKey[0] === 'persist'` → localStorage 24h |
 
-**서버가 leagueId를 모르는 이유:** `sessionStorage`는 브라우저 전용 → SSR/RSC 시점에 접근 불가.  
-→ **첫 방문·리그 선택 전**에는 Next 서버 fetch/SSG 이점이 거의 없음 (Vite SPA와 유사).
+hover prefetch는 Next 한계가 아니라 **RQ 클라이언트 캐시** 패턴이라 Next에서도 유효합니다.
 
-hover prefetch는 Next 한계가 아니라 **RQ 클라이언트 캐시** 패턴이라 Next에서도 유효.
-
-### 9-2. 서버 이점을 쓰려면
-
-관문: **서버가 leagueId를 알게 만들 것** (cookie, URL param, middleware).
-
-| 방향 | 개요 | 기대 효과 |
-| ---- | ---- | --------- |
-| **cookie + submission Server prefetch** | 리그 선택 시 cookie 저장 → `/submission` RSC에서 fetch → RQ `dehydrate` | 재방문·직링크 시 첫 paint 단축 |
-| **middleware 가드** | cookie 없으면 `/` redirect (HTML 전) | `ProtectedRoute` null 깜빡임 감소 |
-| **Route Handler + `revalidate`** | RTDB 조회를 `app/api/...` + 서버 캐시 | RTDB hit 감소, BFF·rate limit 여지 |
-| **Server / Client UI 분리** | Cover·Header 정적 부분 RSC, modal·퀴즈는 client island | JS 번들·hydration 비용 감소 |
-| **Server Actions** | 리그 선택 시 `cookies().set` + `redirect` | cookie 패턴과 자연스럽게 연결 |
-
-**클라이언트 유지가 맞는 것:** prefix 자동완성, 퀴즈·정답 처리, hover prefetch, 입력 state.
-
-### 9-3. 추천 순서 (미적용 · 선택)
+### 9-2. 목표 아키텍처
 
 ```text
-1. Server UI 분리 (비용 낮음)
-2. cookie + middleware 가드
-3. cookie + submission Server prefetch + dehydrate
-4. Route Handler + revalidate
+[리그 선택]
+  Server Action (selectLeagueAction)
+    → cookie에 leagueId 저장
+    → redirect('/submission')
+
+[proxy.ts]  ← 프로젝트 루트 (Next 16: middleware 대신 proxy)
+  /submission 접근 시 cookie leagueId 검증
+    → 없음 → / redirect + toast-message flash (reason: no-league)
+
+[app/submission/page.tsx] (Server)
+  cookies()로 leagueId 읽기
+    → fetchTeamIdsInLeague / fetchPlayerIdsInLeague
+    → QueryClient prefetch + dehydrate
+    → <HydrationBoundary> + <SubmissionView leagueId={…} />
+
+[ToastView] (layout, client)
+  mount → toast-message cookie read → TOAST_MESSAGES 매핑 → delete → 표시 → exit
+
+[client island]
+  모달·퀴즈·검색·hover prefetch — leagueId는 page prop
 ```
 
-현재 PL(id: 39) 단일 리그면 (3)을 cookie 없이 서버 기본값으로 단순화할 수 있으나, 멀티 리그 확장 시 cookie 패턴 권장.
+**멀티 리그 확장:** `league.constants.ts`의 `LEAGUE_LIST`만 늘리면 UI·Action·middleware 검증이 함께 확장됩니다. URL 구조 변경(`/league/[id]/submission`)은 필수가 아닙니다.
+
+### 9-3. 단계별 가이드
+
+#### Phase 1 — Server / Client UI 분리 (비용 낮음) ✅
+
+| 파일 | 권장 |
+| ---- | ---- |
+| `CoverView` | `'use client'` 없이 유지 (RSC) |
+| `LeagueSelectModal` | client island 유지 |
+| `NotFoundView` | `next/link`만 사용 시 RSC 유지 가능 |
+| `Header` | `next/link`만이면 RSC 검토 |
+
+**효과:** 홈 HTML·metadata는 서버, JS 번들은 모달·퀴즈에만 집중.
+
+#### Phase 2 — leagueId를 cookie로 승격 ✅
+
+**목표:** 서버·proxy·RSC가 `leagueId`를 읽을 수 있게 합니다.
+
+| 파일 | 역할 |
+| ---- | ---- |
+| `league.constants.ts` | `LEAGUE_LIST` — allowlist 단일 소스 (검증 연동은 미완) |
+| `actions/selectLeagueAction.ts` | cookie set + `redirect` |
+| `useLeagueSelectModal.ts` | `selectLeagueAction(league.id)` 호출 |
+| ~~`league.store.ts`~~ | **제거** — cookie + RSC prop |
+
+```typescript
+// entities/league/actions/selectLeagueAction.ts (현재)
+'use server'
+
+const COOKIE_NAME = 'league-id'
+
+export async function selectLeagueAction(leagueId: number) {
+  const cookieStore = await cookies()
+  cookieStore.set(COOKIE_NAME, String(leagueId), {
+    path: '/',
+    maxAge: 60 * 60 * 24,
+    sameSite: 'lax',
+  })
+
+  redirect('/submission')
+}
+```
+
+#### Phase 3 — proxy 가드 + redirect flash toast ✅
+
+**목표:** hydration 전 redirect, `ProtectedRoute` null 깜빡임·`alert` 제거.
+
+- 구현: 프로젝트 루트 **`proxy.ts`** (`export default proxy`, `matcher: ['/submission', '/submission/:path*']`)
+- Next 16: `middleware.ts` 대신 **`proxy.ts`** 사용 (루트, `app/`와 동일 레벨)
+- `league-id` 없으면 `ROUTER_PATH.HOME` redirect + `TOAST_REASON.NO_LEAGUE` flash cookie
+- `ProtectedRoute` **제거** — `app/submission/layout.tsx` pass-through
+- `ToastView` / `ToastUI` — flash 전용 (client in-app toast는 별도 추가 예정)
+
+```typescript
+// proxy.ts (요지)
+const response = NextResponse.redirect(new URL(ROUTER_PATH.HOME, request.url))
+response.cookies.set(TOAST_COOKIE_NAME, TOAST_REASON.NO_LEAGUE, {
+  maxAge: 60,
+  path: '/',
+  sameSite: 'lax',
+})
+```
+
+```typescript
+// shared/config/toast.ts (요지)
+export const TOAST_COOKIE_NAME = 'toast-message'
+export const TOAST_REASON = { NO_LEAGUE: 'no-league' } as const
+export const TOAST_MESSAGES = {
+  'no-league': '먼저 리그를 선택해주세요.',
+}
+```
+
+#### Phase 4 — submission Server prefetch + dehydrate ✅
+
+**목표:** `/submission` 첫 진입 시 팀·선수 ID를 서버에서 미리 가져와 RQ 캐시에 주입.
+
+- 구현: `app/submission/page.tsx`
+- 재사용: `fetchTeamIdsInLeague`, `fetchPlayerIdsInLeague` (`shared/api/clientService.ts`)
+- query key: `queryKeysMain.teams.idsByLeaguePersisted`, `players.idsByLeaguePersisted`
+- cookie 기반이므로 `dynamic = 'force-dynamic'` 유지 권장
+- **팀 상세(`fetchTeam`)는 서버 prefetch 제외** — 팀 수 × API 호출로 TTFB 악화. ID 목록만 서버, 상세는 client `useQueries` 유지.
+
+```typescript
+// app/submission/page.tsx (요지)
+const leagueId = Number((await cookies()).get('league-id')?.value)
+const queryClient = new QueryClient()
+
+await Promise.all([
+  queryClient.prefetchQuery({
+    queryKey: queryKeysMain.teams.idsByLeaguePersisted(leagueId),
+    queryFn: () => fetchTeamIdsInLeague(leagueId),
+  }),
+  queryClient.prefetchQuery({
+    queryKey: queryKeysMain.players.idsByLeaguePersisted(leagueId),
+    queryFn: () => fetchPlayerIdsInLeague(leagueId),
+  }),
+])
+
+return (
+  <HydrationBoundary state={dehydrate(queryClient)}>
+    <SubmissionView leagueId={leagueId} />
+  </HydrationBoundary>
+)
+```
+
+**Providers:** 서버 `QueryClient`는 page마다 생성, client `Providers` singleton과 `HydrationBoundary`로 연결.
+
+#### Phase 5 — Route Handler BFF (선택)
+
+**목표:** Firebase RTDB 직접 호출을 서버 뒤로 숨기고 `revalidate`로 캐시.
+
+```text
+app/api/leagues/[leagueId]/team-ids/route.ts
+  → fetch + next: { revalidate: 3600 }
+```
+
+| 시점 | 권장 |
+| ---- | ---- |
+| 트래픽·RTDB 비용 이슈 전 | Phase 4만으로 충분 |
+| 배포 후 모니터링 | Route Handler + `revalidate` 검토 |
+
+### 9-4. 레이어별 역할 (적용 후)
+
+```text
+app/
+  layout.tsx              Server — metadata, ToastView (flash), global.css
+  page.tsx                Server — metadata + CoverView
+  submission/
+    layout.tsx            Server — pass-through (proxy가 가드)
+    page.tsx              Server — cookie read + prefetch + dehydrate + leagueId prop
+
+proxy.ts                  leagueId cookie 검증 + flash toast (루트)
+
+src/entities/league/
+  league.constants.ts     LEAGUE_LIST — UI (+ allowlist 검증 예정)
+  actions/selectLeagueAction.ts
+
+src/shared/
+  config/toast.ts         TOAST_COOKIE_NAME · TOAST_REASON · TOAST_MESSAGES
+  ui/toast/ToastView.tsx  flash cookie read/delete
+  ui/toast/ui/ToastUI.tsx presentational
+
+src/widget/
+  home/CoverView          RSC
+  submission/SubmissionView  client — leagueId prop
+
+src/app/providers/        client — RQ persist (league rehydrate 제거)
+```
+
+### 9-5. client에 남겨야 하는 것
+
+| 기능 | 이유 |
+| ---- | ---- |
+| `LeagueSelectModal` (dialog, portal) | 브라우저 API |
+| `usePrefetchLeagueData` (hover) | client nav 워밍 |
+| 검색 자동완성 (`useFilteringPlayersName`) | 입력 state·디바운스 |
+| 퀴즈·정답 처리 | 인터랙션 |
+| `ClubSquadModal` hover | 포지셔닝·디바운스 |
+| RQ localStorage persist (`persist` key) | 재방문 캐시 보조 |
+
+hover prefetch는 **서버 prefetch를 대체하지 않고 보완**합니다.
+
+### 9-6. 멀티 리그 확장 체크리스트
+
+새 리그 추가 시:
+
+| 위치 | 작업 |
+| ---- | ---- |
+| `league.constants.ts` | `LEAGUE_LIST` 항목 추가 |
+| `entities/league/assets` | 엠블럼 이미지 |
+| middleware / proxy | `LEAGUE_LIST` 기반 검증 (코드 변경 최소) |
+| Firebase RTDB | `leagues/{id}/teamIds`, `playerIds` 데이터 |
+| 서버 prefetch | `leagueId` param만 변경 — 로직 재사용 |
+
+**불필요:** URL 구조 변경, 리그별 `ProtectedRoute` 분기, page마다 모달 배치 변경.
+
+### 9-7. 하지 말아야 할 것
+
+1. **sessionStorage만으로 서버 prefetch 기대** — 구조적으로 불가
+2. **widget 전체에 `'use client'`** — 정적 셸 RSC 이점 상실
+3. **PL 단일이라 cookie 생략** — 멀티 리그 시 전면 수정 필요
+4. **submission에서 팀 상세 전부 서버 prefetch** — TTFB 악화
+5. **Phase 4 없이 proxy만** — 가드는 개선되나 첫 paint 데이터 이점 없음
+
+### 9-8. 기대 효과
+
+| 단계 | 사용자 체감 | 인프라 |
+| ---- | ----------- | ------ |
+| Phase 2–3 | redirect 깜빡임 감소, `/submission` 직링크 처리 | — |
+| Phase 4 | submission 첫 화면 로딩 단축 | RTDB hit 타이밍만 앞당김 |
+| Phase 5 | — | RTDB hit 감소, rate limit 여지 |
+
+Phase 2–4 적용 시 **「Vite SPA + Next 껍데기」** 에서 **실질적인 App Router 이점**으로 전환됩니다.
