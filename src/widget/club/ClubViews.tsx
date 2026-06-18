@@ -1,19 +1,14 @@
 'use client'
 
 import { useClubTabletPanel } from '@/entities/club'
-import {
-  useFetchingTeamsDataInLeague,
-  useLeagueInfoStore,
-} from '@/entities/league'
+import { useFetchingTeamsDataInLeague } from '@/entities/league'
 
 import ClubViewsError from './ui/ClubViewsError'
 import ClubViewsContent from './ui/ClubViewsContent'
 
-function ClubViews() {
-  const leagueId = useLeagueInfoStore(state => state.id)
-  const { teamIdsQuery, teamDatasQuery } = useFetchingTeamsDataInLeague(
-    leagueId ?? 0,
-  )
+function ClubViews({ leagueId }: { leagueId: number }) {
+  const { teamIdsQuery, teamDatasQuery } =
+    useFetchingTeamsDataInLeague(leagueId)
   const tabletPanel = useClubTabletPanel()
 
   if (!leagueId) return null

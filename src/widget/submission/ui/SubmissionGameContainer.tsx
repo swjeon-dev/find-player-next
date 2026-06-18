@@ -5,7 +5,7 @@ import SubmissionCard from './SubmissionCard'
 import { SubmissionLoader } from './SubmissionLoader'
 import styles from './SubmissionGameContainer.module.css'
 
-function SubmissionGameContainer() {
+function SubmissionGameContainer({ leagueId }: { leagueId: number }) {
   const {
     generateQuiz,
     isGeneratingQuiz,
@@ -13,7 +13,7 @@ function SubmissionGameContainer() {
     quizError,
     refetchQuiz,
     player,
-  } = useQuizGenerator()
+  } = useQuizGenerator({ leagueId })
 
   const retryFetching = () => {
     refetchQuiz()

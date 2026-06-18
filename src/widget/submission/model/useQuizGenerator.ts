@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect } from 'react'
 
-import {
-  useLeagueInfoStore,
-  useFetchingPlayersIdInLeague,
-} from '@/entities/league'
+import { useFetchingPlayersIdInLeague } from '@/entities/league'
 import type { IFirebasePlayer } from '@common/model'
 
 import { useQuizStore } from './quiz.store'
@@ -34,7 +31,11 @@ function pickNextQuizPlayerId(
   return next
 }
 
-const useQuizGenerator = (): {
+const useQuizGenerator = ({
+  leagueId,
+}: {
+  leagueId: number
+}): {
   generateQuiz: () => void
   isGeneratingQuiz: boolean
   isChangingQuiz: boolean
@@ -42,7 +43,6 @@ const useQuizGenerator = (): {
   refetchQuiz: () => void
   player: IFirebasePlayer | undefined
 } => {
-  const leagueId = useLeagueInfoStore(state => state.id)
   const quizPlayerId = useQuizStore(state => state.selectedPlayerId)
   const setQuizPlayerId = useQuizStore(state => state.setSelectedPlayerId)
 

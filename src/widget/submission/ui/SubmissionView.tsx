@@ -1,11 +1,11 @@
 import { ClubViews } from '@/widget/club'
 import SubmissionGameContainer from './SubmissionGameContainer'
 
-function SubmissionView() {
+function SubmissionView({ leagueId }: { leagueId: number }) {
   return (
     <>
-      <ClubViews />
-      <SubmissionGameContainer />
+      <ClubViews leagueId={leagueId} />
+      <SubmissionGameContainer leagueId={leagueId} />
     </>
   )
 }
