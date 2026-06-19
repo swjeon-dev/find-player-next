@@ -1,7 +1,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { redirect, RedirectType } from 'next/navigation'
 
 const COOKIE_NAME = 'league-id'
 
@@ -13,5 +13,5 @@ export async function selectLeagueAction(leagueId: number) {
     sameSite: 'lax',
   })
 
-  redirect('/submission')
+  redirect('/submission', RedirectType.replace)
 }

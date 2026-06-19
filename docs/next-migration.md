@@ -77,6 +77,7 @@
 #### 미완료
 
 - [ ] **`LEAGUE_LIST` allowlist 검증** — `selectLeagueAction` · `proxy.ts`에 invalid leagueId 차단 추가
+- [x] **submission server prefetch 제거** — modal client prefetch + skeleton (§9-9-5)
 - [ ] **client 공용 toast** (선택) — in-app API toast (sonner 등). 현재 `ToastView`는 redirect flash 전용
 - [ ] **Route Handler + `revalidate`** (선택) — RTDB BFF·서버 캐시
 
@@ -804,7 +805,7 @@ app/layout.tsx
 | `app/submission/page.tsx` | RSC prefetch + `leagueId` prop | ✅ cookie 유효 시 첫 paint 단축 |
 | `ToastView` | redirect flash cookie 1회 표시 | △ client read (in-app toast는 미구현) |
 | React Query | axios → Firebase RTDB | △ ID 목록 서버 prefetch, 상세·검색 client |
-| `usePrefetchLeagueData` | hover client prefetch | △ server prefetch 보완 |
+| `usePrefetchLeagueData` | hover client prefetch | △ server prefetch와 역할·중복 재검토 (§9-9) |
 
 **관문 통과:** 서버·Edge가 `leagueId` cookie를 읽을 수 있게 되었습니다. 남은 과제는 **allowlist 검증**·선택적 BFF입니다.
 
@@ -892,6 +893,7 @@ export async function selectLeagueAction(leagueId: number) {
 - 구현: 프로젝트 루트 **`proxy.ts`** (`export default proxy`, `matcher: ['/submission', '/submission/:path*']`)
 - Next 16: `middleware.ts` 대신 **`proxy.ts`** 사용 (루트, `app/`와 동일 레벨)
 - `league-id` 없으면 `ROUTER_PATH.HOME` redirect + `TOAST_REASON.NO_LEAGUE` flash cookie
+- cookie 있으면 `NextResponse.next()` — **HTTP redirect 없음**, happy path에서 modal prefetch 캐시 유지 (§9-9-3a)
 - `ProtectedRoute` **제거** — `app/submission/layout.tsx` pass-through
 - `ToastView` / `ToastUI` — flash 전용 (client in-app toast는 별도 추가 예정)
 
@@ -1002,7 +1004,7 @@ src/app/providers/        client — RQ persist (league rehydrate 제거)
 | `ClubSquadModal` hover | 포지셔닝·디바운스 |
 | RQ localStorage persist (`persist` key) | 재방문 캐시 보조 |
 
-hover prefetch는 **서버 prefetch를 대체하지 않고 보완**합니다.
+hover prefetch는 원래 **서버 prefetch를 보완**한다고 적어 두었으나, 서버·클라이언트 캐시가 공유되지 않아 happy path에서 중복이 생길 수 있습니다. 역할 분리·재검토는 **§9-9** 참고.
 
 ### 9-6. 멀티 리그 확장 체크리스트
 
@@ -1024,7 +1026,7 @@ hover prefetch는 **서버 prefetch를 대체하지 않고 보완**합니다.
 2. **widget 전체에 `'use client'`** — 정적 셸 RSC 이점 상실
 3. **PL 단일이라 cookie 생략** — 멀티 리그 시 전면 수정 필요
 4. **submission에서 팀 상세 전부 서버 prefetch** — TTFB 악화
-5. **Phase 4 없이 proxy만** — 가드는 개선되나 첫 paint 데이터 이점 없음
+5. **Phase 4 없이 proxy만** — 가드는 개선되나 첫 paint 데이터 이점 없음 (단, skeleton + client prefetch만으로도 UX 확보 가능 — §9-9)
 
 ### 9-8. 기대 효과
 
@@ -1035,3 +1037,278 @@ hover prefetch는 **서버 prefetch를 대체하지 않고 보완**합니다.
 | Phase 5 | — | RTDB hit 감소, rate limit 여지 |
 
 Phase 2–4 적용 시 **「Vite SPA + Next 껍데기」** 에서 **실질적인 App Router 이점**으로 전환됩니다.
+
+### 9-9. 서버·클라이언트 prefetch 역할 정리 (검토)
+
+> Phase 4(`app/submission/page.tsx` 서버 prefetch) 도입 배경과, **리그 모달 hover prefetch** 의도를 맞춰 본 설계 검토입니다.
+
+#### 배경 — 왜 헷갈렸는가
+
+처음 의도는 다음과 같았습니다.
+
+```text
+[LeagueSelectModal]
+  hover → teamIds · playerIds 를 client에서 prefetch (id만)
+       ↓
+[submission 컴포넌트]
+  useQuery가 캐시된 id를 사용 → 상세 fetch를 빠르게 이어감
+```
+
+그런데 `app/submission/page.tsx`에도 **동일 query key**로 `prefetchQuery`가 있습니다. 이름이 둘 다 prefetch라 **같은 일을 두 번 하는 것처럼** 보입니다.
+
+또한 React Query는 **client 상태·캐시 라이브러리**로 익숙하기 때문에, **서버에서 prefetch가 안 되거나 의미 없다**고 느끼기 쉽습니다. 실제로는 가능하지만, **client 캐시와는 별개**로 동작합니다 (§9-9-0).
+
+#### 9-9-0. React Query인데 서버 prefetch가 가능한가?
+
+**가능합니다.** 다만 client `Providers`의 `queryClient`와 **같은 캐시를 쓰는 것이 아닙니다.**
+
+React Query는 원래 브라우저에서 `useQuery`·`prefetchQuery`로 쓰지만, Next App Router + RSC에서는 아래 패턴이 공식적으로 지원됩니다.
+
+```text
+[Server — RSC page]
+  new QueryClient()                    ← 요청마다 새 인스턴스
+  await queryClient.prefetchQuery(...)
+  dehydrate(queryClient)               ← 캐시 스냅샷 직렬화
+  <HydrationBoundary state={...}>      ← client로 전달
+
+[Client — Providers]
+  queryClient 싱글톤                   ← layout에서 유지
+  useQuery mount → HydrationBoundary가 주입한 data로 캐시 시드
+```
+
+| 오해 | 실제 |
+| ---- | ---- |
+| “RQ는 client 전용이라 서버 prefetch 불가” | 서버에서도 `QueryClient` + `prefetchQuery` + `dehydrate` 가능 |
+| “서버·client가 같은 RQ 캐시를 공유” | **인스턴스가 다름** — 서버 캐시는 dehydrate로 **한 번 넘겨줄 때만** client에 반영 |
+| “modal prefetch가 있으면 서버는 생략됨” | 서버는 client 캐시를 **읽지 못함** — 별도 fetch |
+
+정리하면:
+
+- **client prefetch**(모달 hover) → `Providers`의 `queryClient` 메모리(+ persist)에 쌓임
+- **server prefetch**(submission page) → **그 요청용** `QueryClient`에 쌓였다가 `HydrationBoundary`로 client에 **복사**됨
+- 둘 다 React Query API를 쓰지만 **캐시 저장소가 달라** modal에서 한 prefetch가 서버 쪽을 자동으로 대체하지 않습니다.
+
+이 점이 “React Query인데 왜 서버에서 또 prefetch하나?” / “modal prefetch와 page prefetch가 왜 별개인가?”의 핵심입니다.
+
+실제로는 역할이 다릅니다.
+
+| 계층 | 위치 | 실제 역할 | 필수 여부 |
+| ---- | ---- | --------- | --------- |
+| **client prefetch** | `usePrefetchLeagueData` (모달 hover) | 아직 `/submission`에 가기 **전** id warming | 선택적 최적화 |
+| **server prefetch** | `app/submission/page.tsx` | 페이지 진입 시 서버에서 id fetch **완료 후** 렌더 + `HydrationBoundary`로 client에 주입 | 데이터 보장용 (§9-9-3) |
+
+#### 9-9-1. 서버 prefetch는 “미리”가 아니라 “기다렸다가 보냄”
+
+`submission/page.tsx`는 `await Promise.all([...])`로 fetch가 **끝난 뒤** `SubmissionView`를 렌더합니다.
+
+```text
+/submission 요청
+  → cookie에서 leagueId
+  → 서버: teamIds + playerIds fetch (병렬, await)
+  → dehydrate → HydrationBoundary → client 전달
+  → useQuery mount 시 isPending: false, data 즉시 사용
+```
+
+즉 **데이터 보장**이란, submission 첫 mount 시 id가 이미 있다는 뜻입니다.  
+modal hover 완료 여부·직접 접근·새로고침과 무관하게, 서버가 먼저 채워서 넘깁니다.
+
+#### 9-9-2. 서버·클라이언트는 캐시를 공유하지 않는다
+
+**modal prefetch와 submission page prefetch가 별개로 도는 핵심 이유**는, 같은 API·같은 query key를 써도 **서버 `QueryClient`와 client `QueryClient`가 캐시를 공유하지 않기 때문**입니다.
+
+```text
+[Client]  modal hover → QueryClient(브라우저 메모리 + localStorage persist)
+[Server]  submission page → QueryClient(요청마다 새로 생성, 서버 메모리)
+```
+
+서버는 client의 React Query 캐시를 읽을 수 없습니다.  
+그래서 modal에서 이미 prefetch했어도, submission 서버 컴포넌트는 **항상 다시 fetch**합니다.
+
+| 환경 | 동일 작업 생략 |
+| ---- | -------------- |
+| Client (`usePrefetchLeagueData`, `useQuery` + `staleTime`) | ✅ 가능 (§9-9-2a) |
+| Server (`submission/page.tsx`) | ❌ client 캐시를 모름 |
+
+**반대로 client 안**에서는 modal prefetch ↔ submission `useQuery`가 **같은 `queryClient` 싱글톤**을 쓰므로 캐시·dedupe가 이어집니다.  
+이전에 말한 “중복 fetch”는 주로 **서버 prefetch vs client prefetch** 사이에서 발생합니다.
+
+#### 9-9-2a. React Query dedupe (같은 QueryClient 안)
+
+`queryClient.prefetchQuery` 자체에도 **같은 query key에 대한 중복 방지**가 있습니다. `usePrefetchLeagueData`의 `getQueryData` 체크는 dedupe용이 아니라 “data가 없거나 비어 있을 때만 warming” 조건에 가깝습니다.
+
+| 상황 (같은 client `QueryClient`) | 동작 |
+| -------------------------------- | ---- |
+| prefetch **진행 중** + `useQuery` mount | **dedupe** — 네트워크 요청 1번, 같은 promise 공유 |
+| prefetch **완료**(fresh, `staleTime` 내) + 또 `prefetchQuery` | **생략** — 캐시 사용 |
+| prefetch 완료 + `useQuery` | **캐시 hit** — 즉시 data |
+
+즉 **“prefetch가 끝나기 전에만 중복된다”는 아닙니다.** client 안에서는 in-flight 중에도 dedupe됩니다.
+
+중복이 나는 대표 케이스:
+
+- **서버 prefetch + client prefetch** — `QueryClient` 인스턴스가 다름 (§9-9-2)
+- **staleTime 경과** 또는 강제 refetch 옵션
+- **query key가 다름**
+
+```typescript
+// usePrefetchLeagueData (요지) — dedupe 보조가 아닌 조건부 warming
+const teamsIds = queryClient.getQueryData(queryKeysMain.teams.idsByLeaguePersisted(leagueId))
+if (!teamsIds?.length) {
+  void queryClient.prefetchQuery({ ... })
+}
+```
+
+프로젝트 `staleTime`은 24시간(`src/app/providers/queryClient.ts`)입니다.
+
+#### 9-9-3. redirect 이후 client 캐시는?
+
+**리그 선택 redirect**(`selectLeagueAction` → `redirect('/submission')`)와 **proxy redirect**(`NextResponse.redirect`)는 다른 API입니다. 혼동하면 modal prefetch 캐시가 submission에서 공유되지 않는다고 오해하기 쉽습니다. proxy 분기는 **§9-9-3a** 참고.
+
+`selectLeagueAction`의 `redirect`는 App Router Server Action에서 **soft navigation**(클라이언트 라우터 전환)으로 처리되는 경우가 많습니다. 브라우저 **풀 reload**(새로고침·주소창 직접 입력)와는 다릅니다.
+
+```text
+layout (Providers + queryClient 싱글톤)
+  ├── 홈 (LeagueSelectModal)
+  └── submission
+```
+
+- **soft navigation:** `Providers`의 `queryClient` 싱글톤이 유지 → hover prefetch **메모리 캐시**를 submission `useQuery`가 hit 가능
+- **hard navigation** (새로고침·직접 URL): 메모리 캐시 소실 → `persist` rehydrate(비동기) 또는 새 fetch
+
+서버 prefetch가 **있을 때**는 client 캐시가 남아도 서버 `QueryClient`가 별도 fetch·hydrate합니다 (§9-9-2). **제거 후**(현재) happy path에서는 modal prefetch → submission 캐시 hit이 핵심 경로입니다.
+
+#### 9-9-3a. proxy — `NextResponse.redirect` vs `next` (soft / hard)
+
+`proxy.ts`는 `/submission` 요청 **진입 시** cookie를 검사합니다. **`redirect` vs `next`는 navigation 종류가 다릅니다.**
+
+| 분기 | API | cookie | navigation | submission 도달 |
+| ---- | --- | ------ | ------------ | --------------- |
+| 가드 | `NextResponse.redirect(url)` | `league-id` **없음** | **HTTP redirect → hard navigation** | ❌ `/`로 보냄 |
+| 통과 | `NextResponse.next()` | `league-id` **있음** | **redirect 없음** — 요청 그대로 RSC/page로 전달 | ✅ |
+
+```typescript
+// proxy.ts (요지)
+if (!leagueId) {
+  return NextResponse.redirect(url)  // HTTP redirect — hard nav
+}
+return NextResponse.next()           // 가로채지 않음 — hard nav 아님
+```
+
+**`NextResponse.next()`는 hard navigation이 아닙니다.**  
+브라우저를 다른 URL로 보내지 않고, 해당 요청을 App Router 파이프라인(RSC → page)으로 **통과**시킬 뿐입니다.  
+이 분기에서는 proxy가 client `queryClient`나 modal prefetch 캐시를 **지우지 않습니다.**
+
+**happy path** — modal prefetch가 의미 있는 정상 흐름:
+
+```text
+[홈]
+  modal hover → client prefetch (teamIds · playerIds)
+       ↓
+  리그 선택 → selectLeagueAction
+       → cookie 'league-id' set
+       → redirect('/submission')     ← Server Action soft nav (§9-9-3)
+       ↓
+[proxy — /submission 요청]
+  cookie 있음 → NextResponse.next()  ← HTTP redirect 없음
+       ↓
+[submission]
+  같은 client queryClient → useQuery 캐시 hit
+```
+
+| redirect 종류 | 위치 | happy path에서 | navigation |
+| ------------- | ---- | -------------- | ---------- |
+| `redirect()` (Server Action) | `selectLeagueAction` | ✅ 사용 | soft nav (보통) |
+| `NextResponse.redirect` | `proxy.ts` | ❌ **안 탐** (cookie 이미 있음) | hard nav (가드 전용) |
+| `NextResponse.next` | `proxy.ts` | ✅ 사용 | redirect 없음 — **hard nav 아님** |
+
+**헷갈리기 쉬운 점 정리:**
+
+- **`NextResponse.redirect` = hard navigation** — 맞음. 단, **cookie 없을 때만** 실행 (비정상·직접 접근 가드).
+- **happy path에서는 `NextResponse.next()`** — proxy가 redirect하지 않으므로, **modal 캐시가 submission에서 공유될 수 있음** (서버 prefetch 없을 때 특히).
+- submission에서 **또 fetch**했던 이유(historical)는 proxy hard nav가 아니라 **서버·client `QueryClient` 분리**(§9-9-2)였음.
+
+**비 happy path** (참고):
+
+```text
+/submission 직접 접근 (cookie 없음)
+  → proxy NextResponse.redirect → /   (hard nav, toast cookie set)
+  → submission 미진입 — modal prefetch와 무관
+```
+
+#### 9-9-4. 체감 시간 — 데이터 보장 말고 이점이 큰가?
+
+| 지표 | 서버 prefetch | 서버 prefetch 없음 (client fetch + skeleton) |
+| ---- | ------------- | -------------------------------------------- |
+| **첫 화면·skeleton까지** | fetch 끝날 때까지 submission UI 거의 없음 | shell·skeleton이 먼저 표시 — **체감 유리** |
+| **id가 채워진 UI까지** | 비슷하거나 서버가 수백 ms 앞설 수 있음 | hover 캐시 hit 시 **더 빠를 수 있음** |
+| **TBT** | 서버 fetch는 TBT에 직접 포함되지 않음 | client fetch도 비동기 — TBT와는 별개 |
+| **navigation blocking** | 서버가 Firebase 응답까지 **기다린 뒤** 전달 — **불리** | skeleton으로 즉시 피드백 |
+
+**데이터 보장(첫 mount에 skeleton 없이 id 확보) 말고는 이점이 거의 없고**, happy path(hover → 선택)에서는 오히려 **중복 fetch + 화면 전환 지연**이 될 수 있습니다.
+
+이미 `ClubViewsContent`는 `teamIdsQuery.isPending`일 때 skeleton을 표시합니다. 서버 prefetch 없이도 UX는 확보 가능합니다.
+
+#### 9-9-5. 의도에 맞는 역할 분리 (적용됨)
+
+> submission RSC prefetch 제거 후 기준.
+
+```text
+[홈 — LeagueSelectModal]     client prefetch (hover)
+  → teamIds · playerIds id만 warming
+  → persist key + staleTime으로 중복 fetch 생략
+
+[submission/page]            shell만 서버 렌더 (leagueId prop)
+  → useQuery가 캐시 hit 또는 client fetch
+  → 로딩 구간은 skeleton
+
+[proxy — happy path]         cookie 있음 → NextResponse.next()
+  → hard nav 없음 → modal 캐시 submission에서 공유 가능
+
+[직접 접근 / 새로고침]       modal prefetch 없음
+  → client fetch + skeleton (또는 persist rehydrate)
+  → cookie 없으면 proxy redirect (hard nav, §9-9-3a)
+```
+
+| 케이스 | 기대 동작 |
+| ------ | --------- |
+| hover → 리그 선택 | 캐시 hit → 빠른 표시 |
+| hover 없이 바로 선택 | skeleton → client fetch |
+| `/submission` 직접 접근·새로고침 | persist 또는 fetch + skeleton |
+
+#### 9-9-6. 결론 · 미완료 후보
+
+- **client prefetch(모달 hover)** 는 원래 의도에 맞는 위치입니다.
+- **server prefetch(submission page)** 는 이름과 달리 “선택적 미리 로딩”이 아니라 **진입 시 fetch 완료를 기다린 뒤 렌더**하는 **데이터 보장** 패턴입니다.
+- **React Query는 서버 prefetch도 가능**하지만, client `queryClient`와 캐시를 공유하지 않습니다. modal·page prefetch가 별개인 이유입니다 (§9-9-0, §9-9-2).
+- 데이터 보장이 꼭 필요하지 않다면, **server prefetch 제거 + modal client prefetch + skeleton** 이 의도·체감 성능 모두에 더 잘 맞을 수 있습니다. (submission RSC prefetch **제거됨** — §9-9-5)
+- **happy path**에서 modal 캐시 공유: `selectLeagueAction` soft nav + proxy `NextResponse.next()` (§9-9-3a)
+
+```text
+[x] submission server prefetch 제거 (§9-9-5)
+```
+
+## 10. 부록 — 오케스트레이션 · 구현
+
+### 용어
+
+| 용어 | 의미 | 위치 |
+| ---- | ---- | ---- |
+| **오케스트레이션** | 페이지에 필요한 데이터를 **어떤 순서로, 어디서 가져와, 누구에게 넘길지** 연결·조립하는 역할 | `app/*/page.tsx` (FSD `pages`에 해당) |
+| **구현** | API 호출, DTO 변환, query hook 등 **데이터를 실제로 가져오고 가공하는 로직** | `entities/*/model`, `shared/api` |
+
+```typescript
+// 오케스트레이션 — page: 연결만
+const leaguesInfo = await fetchLeagueList().then(leagueDto)
+return <CoverView leaguesInfo={leaguesInfo} />
+
+// 구현 — entities/shared: fetchLeagueList, leagueDto
+```
+
+### FSD `pages`는 UI 조립만?
+
+**아닙니다.** FSD `pages` 레이어는 widget을 **렌더링하는 것**과 함께, 해당 페이지 진입 시 필요한 데이터를 **오케스트레이션**하는 역할도 가질 수 있습니다.
+
+- **오케스트레이션(O)** — page: `cookies`·`searchParams` 읽기, prefetch 호출, props 전달
+- **구현(X)** — page 안에 raw fetch·파싱·비즈니스 규칙 직접 작성
+
+Next App Router에서는 루트 `app/*/page.tsx`가 FSD `pages`에 대응하므로, §5-1의 “라우팅·metadata·layout”에 **서버 데이터 오케스트레이션**을 더해 이해하면 됩니다. UI 블록 조합은 `widget`, fetch 구현은 `entities` / `shared`에 둡니다.

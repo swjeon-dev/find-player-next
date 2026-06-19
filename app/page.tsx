@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
 import { CoverView } from '@/widget'
+import { fetchLeagueList } from '@/shared/api'
+import { leagueDto } from '@/entities/league/model/leagueDto'
 
 export const metadata: Metadata = {
   title: '홈',
@@ -8,6 +10,8 @@ export const metadata: Metadata = {
   keywords: ['홈', '리그', '선수 퀴즈'],
 }
 
-export default function HomePage() {
-  return <CoverView />
+export default async function HomePage() {
+  const leaguesInfo = await fetchLeagueList().then(leagueDto)
+
+  return <CoverView leaguesInfo={leaguesInfo} />
 }

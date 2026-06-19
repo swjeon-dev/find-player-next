@@ -1,16 +1,6 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from '@tanstack/react-query'
 
-import {
-  fetchTeamIdsInLeague,
-  fetchPlayerIdsInLeague,
-  queryKeysMain,
-} from '@/shared'
 import { SubmissionView } from '@/widget'
 
 export const metadata: Metadata = {
@@ -21,22 +11,6 @@ export const metadata: Metadata = {
 
 export default async function SubmissionPage() {
   const leagueId = Number((await cookies()).get('league-id')?.value)
-  const queryClient = new QueryClient()
 
-  await Promise.all([
-    queryClient.prefetchQuery({
-      queryKey: queryKeysMain.teams.idsByLeaguePersisted(leagueId),
-      queryFn: () => fetchTeamIdsInLeague(leagueId),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: queryKeysMain.players.idsByLeaguePersisted(leagueId),
-      queryFn: () => fetchPlayerIdsInLeague(leagueId),
-    }),
-  ])
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <SubmissionView leagueId={leagueId} />
-    </HydrationBoundary>
-  )
+  return <SubmissionView leagueId={leagueId} />
 }

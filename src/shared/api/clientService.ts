@@ -1,4 +1,8 @@
-import type { IFirebasePlayer, IFirebaseTeamDetail } from '@common/model'
+import type {
+  IFirebasePlayer,
+  IFirebaseTeamDetail,
+  ILeague,
+} from '@common/model'
 import FIREBASE_API_ENDPOINT from '../config/firebaseRoute'
 import {
   getFirebaseURLPath,
@@ -26,6 +30,13 @@ export const fetchTeam = async (
   return await fetchFirebaseData<IFirebaseTeamDetail>(getFirebaseURLPath(url))
 }
 
+export const fetchLeagueList = async (): Promise<Record<string, ILeague>> => {
+  const url = FIREBASE_API_ENDPOINT.LEAGUE_LIST
+
+  return await fetchFirebaseData<Record<string, ILeague>>(
+    getFirebaseURLPath(url),
+  )
+}
 export const fetchTeamIdsInLeague = async (
   leagueId: number,
 ): Promise<number[]> => {

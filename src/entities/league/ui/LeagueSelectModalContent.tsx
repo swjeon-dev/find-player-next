@@ -3,11 +3,10 @@
 import type { RefObject } from 'react'
 import { createPortal } from 'react-dom'
 
-import { LEAGUE_LIST } from '../model/league.constants'
-import type { LeagueListItem } from '../model/league.constants'
 import usePrefetchLeagueData from '../model/usePrefetchLeagueData'
 import LeagueSelectItem from './LeagueSelectItem'
 import styles from './LeagueSelectModal.module.css'
+import type { ILeagueInfo } from '@common/model'
 
 const MODAL_ROOT_ID = 'modal-root'
 
@@ -17,13 +16,15 @@ function getModalRoot(): HTMLElement | null {
 }
 
 interface LeagueSelectModalContentProps {
+  leaguesInfo: ILeagueInfo[]
   isOpen: boolean
   dialogRef: RefObject<HTMLDialogElement | null>
   onClose: () => void
-  onSelectLeague: (league: LeagueListItem) => void
+  onSelectLeague: (league: ILeagueInfo) => void
 }
 
 export default function LeagueSelectModalContent({
+  leaguesInfo,
   isOpen,
   dialogRef,
   onClose,
@@ -50,7 +51,7 @@ export default function LeagueSelectModalContent({
       <div className={styles['container']} onClick={e => e.stopPropagation()}>
         <h1 className={styles['title']}>Select League you want</h1>
         <div className={styles['list']}>
-          {LEAGUE_LIST.map(league => (
+          {leaguesInfo.map(league => (
             <LeagueSelectItem
               key={league.id}
               league={league}

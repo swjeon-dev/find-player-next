@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { selectLeagueAction } from '@/entities/league/actions/selectLeagueAction'
-import type { LeagueListItem } from './league.constants'
+import type { ILeagueInfo } from '@common/model'
 
 export default function useLeagueSelectModal() {
   const [isOpen, setIsOpen] = useState(false)
@@ -18,7 +18,7 @@ export default function useLeagueSelectModal() {
     setIsOpen(false)
   }, [])
 
-  const selectLeague = useCallback((league: LeagueListItem) => {
+  const selectLeague = useCallback((league: ILeagueInfo) => {
     selectLeagueAction(league.id)
   }, [])
 
