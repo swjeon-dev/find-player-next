@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
 import { Header, MainContainer } from '@/shared/ui/layout'
-import { ToastView } from '@/shared/ui'
+import { FlashToastView, NotificationView } from '@/shared/ui'
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +28,8 @@ export default async function RootLayout({
           <Header />
           <MainContainer>{children}</MainContainer>
         </Providers>
-        <ToastView />
+        <FlashToastView />
+        <NotificationView />
 
         <div id='modal-root' />
       </body>

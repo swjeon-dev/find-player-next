@@ -1,6 +1,6 @@
 'use client'
 
-import type { RefObject } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 
 import usePrefetchLeagueData from '../model/usePrefetchLeagueData'
@@ -10,31 +10,29 @@ import type { ILeagueInfo } from '@common/model'
 
 const MODAL_ROOT_ID = 'modal-root'
 
-function getModalRoot(): HTMLElement | null {
-  if (typeof document === 'undefined') return null
-  return document.getElementById(MODAL_ROOT_ID)
-}
-
 interface LeagueSelectModalContentProps {
   leaguesInfo: ILeagueInfo[]
-  isOpen: boolean
   dialogRef: RefObject<HTMLDialogElement | null>
   onClose: () => void
-  onSelectLeague: (league: ILeagueInfo) => void
+  onSelectLeague: (leagueId: ILeagueInfo['id']) => void
 }
 
 export default function LeagueSelectModalContent({
   leaguesInfo,
-  isOpen,
   dialogRef,
   onClose,
   onSelectLeague,
 }: LeagueSelectModalContentProps) {
+  const [mounted, setMounted] = useState(false)
   const { prefetchingLeagueData } = usePrefetchLeagueData()
 
-  if (!isOpen) return null
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  const modalRoot = getModalRoot()
+  if (!mounted) return null
+
+  const modalRoot = document.getElementById(MODAL_ROOT_ID)
   if (!modalRoot) return null
 
   return createPortal(

@@ -12,6 +12,10 @@
 .btn:hover {
   cursor: pointer;
 }
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 
 @media (max-width: 640px) {
   .btn {

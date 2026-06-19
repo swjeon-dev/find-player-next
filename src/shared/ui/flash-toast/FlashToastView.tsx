@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react'
 
 import {
-  TOAST_COOKIE_NAME,
-  TOAST_MESSAGES,
-  type ToastReason,
+  FLASH_TOAST_COOKIE_NAME,
+  FLASH_TOAST_MESSAGES,
+  type FlashToastReason,
 } from '@/shared/config'
 
-import ToastUI from './ui/ToastUI'
+import FlashToastUI from './FlashToastUI'
 
-const TOAST_VISIBLE_MS = 2500
+const FLASH_TOAST_VISIBLE_MS = 2500
 
 function getCookie(name: string): string | null {
   const prefix = `${name}=`
@@ -23,25 +23,25 @@ function deleteCookie(name: string) {
 }
 
 function resolveMessage(raw: string): string {
-  if (raw in TOAST_MESSAGES) {
-    return TOAST_MESSAGES[raw as ToastReason]
+  if (raw in FLASH_TOAST_MESSAGES) {
+    return FLASH_TOAST_MESSAGES[raw as FlashToastReason]
   }
 
   return raw
 }
 
-function ToastView() {
+function FlashToastView() {
   const [message, setMessage] = useState<string | null>(null)
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
-    const raw = getCookie(TOAST_COOKIE_NAME)
+    const raw = getCookie(FLASH_TOAST_COOKIE_NAME)
     if (!raw) return
 
     setMessage(resolveMessage(raw))
-    deleteCookie(TOAST_COOKIE_NAME)
+    deleteCookie(FLASH_TOAST_COOKIE_NAME)
 
-    const timer = setTimeout(() => setIsVisible(false), TOAST_VISIBLE_MS)
+    const timer = setTimeout(() => setIsVisible(false), FLASH_TOAST_VISIBLE_MS)
 
     return () => clearTimeout(timer)
   }, [])
@@ -55,7 +55,7 @@ function ToastView() {
   if (!message) return null
 
   return (
-    <ToastUI
+    <FlashToastUI
       message={message}
       isVisible={isVisible}
       handleAnimationEnd={handleAnimationEnd}
@@ -63,4 +63,4 @@ function ToastView() {
   )
 }
 
-export default ToastView
+export default FlashToastView

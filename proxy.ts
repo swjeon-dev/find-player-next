@@ -1,4 +1,8 @@
-import { ROUTER_PATH, TOAST_COOKIE_NAME, TOAST_REASON } from '@/shared/config'
+import {
+  FLASH_TOAST_COOKIE_NAME,
+  FLASH_TOAST_REASON,
+  ROUTER_PATH,
+} from '@/shared/config'
 import { NextResponse, type NextRequest } from 'next/server'
 
 function proxy(request: NextRequest) {
@@ -11,7 +15,7 @@ function proxy(request: NextRequest) {
     const url = new URL(ROUTER_PATH.HOME, request.url)
 
     const response = NextResponse.redirect(url)
-    response.cookies.set(TOAST_COOKIE_NAME, TOAST_REASON.NO_LEAGUE, {
+    response.cookies.set(FLASH_TOAST_COOKIE_NAME, FLASH_TOAST_REASON.NO_LEAGUE, {
       maxAge: 60,
       path: '/',
       sameSite: 'lax',

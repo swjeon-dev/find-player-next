@@ -1,9 +1,11 @@
+'use client'
+
 import styles from './LeagueSelectModal.module.css'
 import type { ILeagueInfo } from '@common/model'
 
 interface LeagueSelectItemProps {
   league: ILeagueInfo
-  onSelect: (league: ILeagueInfo) => void
+  onSelect: (leagueId: ILeagueInfo['id']) => void
   onPrefetch: (leagueId: number) => void
 }
 
@@ -16,7 +18,7 @@ export default function LeagueSelectItem({
     <button
       type='button'
       className={styles['box']}
-      onClick={() => onSelect(league)}
+      onClick={() => onSelect(league.id)}
       onMouseEnter={() => onPrefetch(league.id)}
       aria-label={`${league.name} 리그 선택`}
     >

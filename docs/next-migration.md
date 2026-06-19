@@ -20,6 +20,7 @@
 - [x] styled-components 인프라 제거 — `ThemeProvider`, `StyledComponentsRegistry`, `compiler.styledComponents`, `styled-components`·`styled-reset`·`@types/styled-components`, `theme.ts`·`styled.d.ts` 제거; `breakpoints.ts` 분리
 - [x] Recoil → Zustand — `quiz`·`input` store, persist·SSR hydration (§8). **leagueId는 §9에서 cookie로 이전** (`league.store` 제거)
 - [x] quiz store · React Query 분리 — `selectedPlayerId` persist, 선수 데이터 RQ (§8-8)
+- [x] **LeagueSelectModal ref-only + hydration `mounted`** — portal·dialog SSR/hydration 정리 (§10)
 
 ### Recoil → Zustand 진행률
 
@@ -997,7 +998,7 @@ src/app/providers/        client — RQ persist (league rehydrate 제거)
 
 | 기능 | 이유 |
 | ---- | ---- |
-| `LeagueSelectModal` (dialog, portal) | 브라우저 API |
+| `LeagueSelectModal` (dialog, portal) | 브라우저 API · SSR/hydration 주의 (§10) |
 | `usePrefetchLeagueData` (hover) | client nav 워밍 |
 | 검색 자동완성 (`useFilteringPlayersName`) | 입력 state·디바운스 |
 | 퀴즈·정답 처리 | 인터랙션 |
@@ -1287,7 +1288,114 @@ return NextResponse.next()           // 가로채지 않음 — hard nav 아님
 [x] submission server prefetch 제거 (§9-9-5)
 ```
 
-## 10. 부록 — 오케스트레이션 · 구현
+## 10. React → Next 전환 시 환경 차이 이슈
+
+> Vite SPA(CSR)에서 문제없던 Client Component·모달·portal 패턴이, Next App Router **SSR + hydration** 환경에서만 드러나는 차이를 정리합니다. §9(서버 이점)와 별도로, **프레임워크/runtime 환경** 때문에 생기는 이슈입니다.
+
+### 10-1. 배경 — 같은 React, 다른 runtime
+
+| | React SPA (Vite/CRA) | Next App Router |
+| -- | -------------------- | --------------- |
+| 첫 paint | 브라우저에서만 render | **서버 SSR pass** → HTML → 클라이언트 hydration |
+| `'use client'` | 사실상 전부 client | **서버에서도 initial HTML용 render 1회** |
+| `document` / `window` | 항상 있음 (또는 없으면 아예 실행 안 함) | **SSR pass에는 없음**, hydration 이후 있음 |
+| portal (`createPortal`) | 문제 적음 | **서버·클라 첫 render 불일치** 시 hydration error |
+
+코드는 React지만, **요청 → SSR HTML → hydration** 단계가 추가됩니다.
+
+### 10-2. hydration 규칙 (핵심)
+
+React hydration은 **클라이언트 첫 render 출력**이 **서버가 내려준 HTML**과 같아야 합니다.
+
+```text
+① Server render   →  HTML 생성
+② Client 1st render (hydration)  →  ①과 동일해야 함
+③ useEffect 이후  →  browser-only UI 추가·변경 가능
+```
+
+- **③ 이후**에만 `document`, `createPortal`, `showModal()` 등을 써도 됩니다.
+- **②에서** 서버는 `null`인데 클라이언트만 `<dialog>`를 그리면 **`Hydration failed`** 가 납니다.
+
+이 규칙은 Next 전용이 아니라 **SSR React 공통**이지만, App Router는 Client Component도 SSR하므로 **모달·portal에서 자주 마주칩니다.**
+
+### 10-3. `'use client'` 오해
+
+| 오해 | 실제 |
+| ---- | ---- |
+| “client 컴포넌트 = 서버 render 없음” | **첫 요청 SSR pass에 포함** (HTML/RSC payload) |
+| “모달은 client니까 SSR과 무관” | **첫 HTML/hydration은 맞춰야 함** |
+| “ref-only면 state 불필요” | open/close state(`isOpen`)와 **hydration gate state(`mounted`)** 는 별개 |
+
+### 10-4. 환경 차이로 흔한 이슈
+
+| 패턴 | React SPA | Next SSR | 증상 |
+| ---- | --------- | -------- | ---- |
+| render에서 `document.getElementById` + portal | 통과 | 서버 `null` / 클라 `<dialog>` | hydration mismatch |
+| render에서 `ref.current`로 mount 여부 판단 | 드묾 | **ref는 mount 후**에만 채워짐 | dialog never mount · open 무력 |
+| `isOpen && return null` (조건부 mount) | open/close 제어 | **초기 `false` → 서버·클라 둘 다 null** | hydration 우연히 통과 |
+| ref-only + 항상 portal (gate 없음) | OK | hydration 불일치 | `Hydration failed` |
+| `mounted` + `useEffect` (client-only gate) | 불필요한 경우 많음 | **서버·클라 첫 render null 일치** | 권장 패턴 |
+
+### 10-5. 사례 — `LeagueSelectModal` (`LeagueSelectModalContent`)
+
+**Before (`isOpen` state + 조건부 mount)**
+
+```text
+isOpen === false (초기)  →  서버·클라 모두 return null  →  hydration OK
+open 클릭  →  setState  →  mount  →  useEffect showModal()
+```
+
+`isOpen`이 **open/close**와 **hydration(초기 null)** 을 동시에 맡아, Next에서 “우연히” 문제가 가려졌습니다.
+
+**After (ref-only, gate 없이 portal)**
+
+```text
+SSR        getModalRoot() → null  →  return null
+Client 1st getModalRoot() → #modal-root  →  createPortal(<dialog>)  →  mismatch
+```
+
+**추가 실수 — render에서 `dialogRef.current` 검사**
+
+```text
+render: ref.current === null  →  return null  →  <dialog> never mount
+openModal: ref.current === null  →  showModal() skip
+```
+
+ref는 **이벤트/`openModal`에서** 쓰는 API이지, render 조건으로 쓰면 안 됩니다.
+
+**현재 권장 (ref-only + hydration `mounted`)**
+
+```tsx
+const [mounted, setMounted] = useState(false)
+useEffect(() => setMounted(true), [])
+if (!mounted) return null
+// mounted 이후: createPortal(<dialog ref={dialogRef}>, modalRoot)
+// open/close: dialogRef.showModal() / close() — isOpen state 없음
+```
+
+| state / API | 역할 |
+| ----------- | ---- |
+| `mounted` | **hydration** — 언제 portal 허용할지 (1회 true) |
+| `dialogRef` | **open/close** — `showModal()` / `close()` |
+| `#modal-root` | portal 대상 |
+| `isOpen` (제거) | open/close + (부수) hydration — ref-only와 역할 중복 |
+
+**부수 이슈 (실무 영향 작음):** `mounted` 직전·`<dialog>` commit 직전에 `openModal` 클릭 시 한 번 no-op → **재클릭 시 정상**. hydration mismatch와는 별개입니다.
+
+### 10-6. 대응 패턴 요약
+
+| 패턴 | 용도 | open/close |
+| ---- | ---- | ---------- |
+| **`mounted` gate** (권장) | portal + ref-only · hydration | ref |
+| **`isOpen` + 조건부 mount** | 닫을 때 DOM 제거 | state + ref/effect |
+| **`dynamic(..., { ssr: false })`** | 해당 subtree SSR 제외 | ref 또는 state |
+| **portal 없이 `<dialog>` 인라인** | `#modal-root` 불필요 | ref (CSS/stack 주의) |
+
+§9-5 client 잔존 목록(`LeagueSelectModal`, `ClubSquadModal` 등)을 Next로 옮길 때 **§10 hydration** 과 **§9 서버 이점** 을 구분해 보면 됩니다.
+
+---
+
+## 11. 부록 — 오케스트레이션 · 구현
 
 ### 용어
 

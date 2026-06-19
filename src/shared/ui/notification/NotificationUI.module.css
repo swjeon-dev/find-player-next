@@ -1,8 +1,8 @@
-.toast {
+.notification {
   position: fixed;
   bottom: 1.5rem;
   left: 50%;
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -19,10 +19,11 @@
 }
 
 .visible-animation {
-  animation: toast-enter 0.28s ease-out;
+  animation: notification-enter 0.28s ease-out;
 }
+
 .invisible-animation {
-  animation: toast-out 0.28s ease-out forwards;
+  animation: notification-out 0.28s ease-out forwards;
 }
 
 .message {
@@ -32,7 +33,7 @@
   color: var(--color-text-muted);
 }
 
-@keyframes toast-enter {
+@keyframes notification-enter {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(0.75rem);
@@ -44,7 +45,7 @@
   }
 }
 
-@keyframes toast-out {
+@keyframes notification-out {
   from {
     opacity: 1;
     transform: translateX(-50%) translateY(0);

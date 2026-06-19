@@ -1,20 +1,35 @@
 'use client'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
 
+import { NOTIFICATION_REASON, showNotificationReason } from '@/shared'
 import useLeagueSelectModal from '../model/useLeagueSelectModal'
 import LeagueSelectModalContent from './LeagueSelectModalContent'
 import LeagueSelectModalTrigger from './LeagueSelectModalTrigger'
 import type { ILeagueInfo } from '@common/model'
 
 function LeagueSelectModal({ leaguesInfo }: { leaguesInfo: ILeagueInfo[] }) {
-  const { isOpen, dialogRef, openModal, closeModal, selectLeague } =
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const { dialogRef, openModal, closeModal, selectLeague } =
     useLeagueSelectModal()
+
+  const handleOpen = () => {
+    if (leaguesInfo.length === 0) {
+      showNotificationReason(NOTIFICATION_REASON.LEAGUE_LIST_UNAVAILABLE)
+      startTransition(() => {
+        router.refresh()
+      })
+      return
+    }
+    openModal()
+  }
 
   return (
     <>
-      <LeagueSelectModalTrigger onOpen={openModal} />
+      <LeagueSelectModalTrigger onOpen={handleOpen} disabled={isPending} />
       <LeagueSelectModalContent
         leaguesInfo={leaguesInfo}
-        isOpen={isOpen}
         dialogRef={dialogRef}
         onClose={closeModal}
         onSelectLeague={selectLeague}
