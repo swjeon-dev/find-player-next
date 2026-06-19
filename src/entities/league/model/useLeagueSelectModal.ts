@@ -1,12 +1,15 @@
 'use client'
 
-import { useRef } from 'react'
+import { unstable_rethrow } from 'next/navigation'
+import { useRef, useTransition } from 'react'
 
 import { selectLeagueAction } from '@/entities/league/actions/selectLeagueAction'
+import { showNotificationReason } from '@/shared'
 import type { ILeagueInfo } from '@common/model'
 
 export default function useLeagueSelectModal() {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [isSelecting, startTransition] = useTransition()
 
   const openModal = () => {
     if (!dialogRef.current) return
@@ -20,7 +23,17 @@ export default function useLeagueSelectModal() {
   }
 
   const selectLeague = (leagueId: ILeagueInfo['id']) => {
-    selectLeagueAction(leagueId)
+    startTransition(async () => {
+      try {
+        const result = await selectLeagueAction(leagueId)
+        if (!result.ok) {
+          closeModal()
+          showNotificationReason(result.reason)
+        }
+      } catch (error) {
+        unstable_rethrow(error)
+      }
+    })
   }
 
   return {
@@ -28,5 +41,6 @@ export default function useLeagueSelectModal() {
     openModal,
     closeModal,
     selectLeague,
+    isSelecting,
   }
 }

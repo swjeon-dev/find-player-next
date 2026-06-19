@@ -1,5 +1,6 @@
 export const NOTIFICATION_REASON = {
   LEAGUE_LIST_UNAVAILABLE: 'league-list-unavailable',
+  LEAGUE_SELECT_UNAVAILABLE: 'league-select-unavailable',
 } as const
 
 export type NotificationReason =
@@ -8,4 +9,6 @@ export type NotificationReason =
 export const NOTIFICATION_MESSAGES: Record<NotificationReason, string> = {
   [NOTIFICATION_REASON.LEAGUE_LIST_UNAVAILABLE]:
     '리그 목록을 불러오지 못했습니다. Game Start를 다시 눌러 주세요.',
+  [NOTIFICATION_REASON.LEAGUE_SELECT_UNAVAILABLE]:
+    '유효하지 않은 리그입니다. 리그를 다시 선택해주세요.',
 }

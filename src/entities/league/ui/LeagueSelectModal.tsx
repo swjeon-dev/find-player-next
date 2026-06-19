@@ -10,8 +10,8 @@ import type { ILeagueInfo } from '@common/model'
 
 function LeagueSelectModal({ leaguesInfo }: { leaguesInfo: ILeagueInfo[] }) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const { dialogRef, openModal, closeModal, selectLeague } =
+  const [isRefreshing, startTransition] = useTransition()
+  const { dialogRef, openModal, closeModal, selectLeague, isSelecting } =
     useLeagueSelectModal()
 
   const handleOpen = () => {
@@ -27,7 +27,10 @@ function LeagueSelectModal({ leaguesInfo }: { leaguesInfo: ILeagueInfo[] }) {
 
   return (
     <>
-      <LeagueSelectModalTrigger onOpen={handleOpen} disabled={isPending} />
+      <LeagueSelectModalTrigger
+        onOpen={handleOpen}
+        disabled={isRefreshing || isSelecting}
+      />
       <LeagueSelectModalContent
         leaguesInfo={leaguesInfo}
         dialogRef={dialogRef}
