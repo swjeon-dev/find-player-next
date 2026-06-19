@@ -65,7 +65,10 @@ async function proxy(request: NextRequest) {
       })
     }
   } catch {
-    return NextResponse.next()
+    return redirectHomeWithFlash(
+      request,
+      FLASH_TOAST_REASON.LEAGUE_LIST_UNAVAILABLE,
+    )
   }
 
   return NextResponse.next()

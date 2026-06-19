@@ -24,16 +24,23 @@
 
 ## 남은 작업 — 우선순위
 
-### P0 — 신뢰성·보안 (다음 권장)
+### P0 — 신뢰성·보안
 
-| # | 작업 | 현재 | 목표 |
-| - | ---- | ---- | ---- |
-| 1 | **`leagueDto` empty 정책** | `[]` 그대로 반환, TODO 주석 | 서버 1회 retry / `error` / unavailable UI 중 **정책 확정** (홈·modal notification과 연계) |
-| 2 | **proxy fetch 실패 정책** | API 오류 시 `NextResponse.next()` (fail-open) | fail-open 유지 vs fail-closed 중 **명시적 정책** |
+| # | 작업 | 상태 |
+| - | ---- | ---- |
+| 1 | **`leagueId` 검증** (Action + proxy) | ✅ `getValidLeagueIds` / `isValidLeagueId` 공유 |
+| 2 | **`leagueDto` empty / fetch 정책** | ✅ `fetchLeaguesInfoServer` — 1회 retry, empty·fetch 실패 시 `LeagueListError` |
+| 3 | **proxy fetch 실패** | ✅ fail-closed — `/` redirect + `LEAGUE_LIST_UNAVAILABLE` flash (cookie 유지) |
 
-**관련 파일:** `leagueDto.ts`, `app/page.tsx`, `proxy.ts`
+**정책 요약**
 
-> **`leagueId` 검증 (2026-06 완료):** `getValidLeagueIds` + `isValidLeagueId` 공유. `selectLeagueAction` → Notification, `proxy.ts` → invalid cookie 삭제 + `FlashToastView` (`INVALID_LEAGUE`). `fetchLeagueListServer` (native fetch, `revalidate: 1h`).
+| 계층 | fetch/empty 실패 | invalid id |
+| ---- | ---------------- | ---------- |
+| 홈 RSC | `[]` → Game Start 시 Notification | — |
+| `selectLeagueAction` | `LEAGUE_LIST_UNAVAILABLE` Notification | `LEAGUE_SELECT_UNAVAILABLE` |
+| `proxy.ts` | flash + redirect (cookie 유지) | flash + cookie 삭제 |
+
+**관련 파일:** `leagueList.server.ts`, `leagueValidation.ts`, `proxy.ts`, `app/page.tsx`, `selectLeagueAction.ts`
 
 ---
 
@@ -97,13 +104,11 @@
 ## 추천 적용 순서
 
 ```text
-1. leagueDto empty 정책 확정                       ← P0
-2. proxy fetch 실패 정책 확정 (fail-open vs closed) ← P0
-3. axios → fetch + server fetch 모듈 분리          ← P1
-4. Route Handler BFF + revalidate (리그·id 목록)    ← P1
-5. loading / error boundary                        ← P2
-6. next/image, Suspense 세분화                     ← P2
-7. 배포                                              ← P3
+1. axios → fetch + server fetch 모듈 분리          ← P1
+2. Route Handler BFF + revalidate (리그·id 목록)    ← P1
+3. loading / error boundary                        ← P2
+4. next/image, Suspense 세분화                     ← P2
+5. 배포                                              ← P3
 ```
 
 ---
@@ -113,8 +118,8 @@
 ```text
 [x] selectLeagueAction — API 목록 기반 leagueId 검증 + Notification
 [x] proxy.ts — API 목록 기반 leagueId 검증 + invalid cookie 삭제 + FlashToast
-[ ] leagueDto empty / fetch 실패 정책
-[ ] proxy fetch 실패 정책 (현재 fail-open)
+[x] leagueDto empty / fetch 실패 — fetchLeaguesInfoServer + LeagueListError
+[x] proxy fetch 실패 — fail-closed + LEAGUE_LIST_UNAVAILABLE flash
 [ ] axios → fetch (shared/api)
 [ ] server fetch 모듈 분리
 [ ] Route Handler BFF + revalidate

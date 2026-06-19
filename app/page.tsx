@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
+import { fetchLeaguesInfoServer } from '@/entities/league/model/leagueList.server'
 import { CoverView } from '@/widget'
-import { fetchLeagueList } from '@/shared/api'
-import { leagueDto } from '@/entities/league/model/leagueDto'
+import type { ILeagueInfo } from '@common/model'
 
 export const metadata: Metadata = {
   title: '홈',
@@ -11,7 +11,13 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const leaguesInfo = await fetchLeagueList().then(leagueDto)
+  let leaguesInfo: ILeagueInfo[] = []
+
+  try {
+    leaguesInfo = await fetchLeaguesInfoServer()
+  } catch {
+    leaguesInfo = []
+  }
 
   return <CoverView leaguesInfo={leaguesInfo} />
 }

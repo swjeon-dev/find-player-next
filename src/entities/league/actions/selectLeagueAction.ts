@@ -21,7 +21,13 @@ export type SelectLeagueResult =
 export async function selectLeagueAction(
   leagueId: number,
 ): Promise<SelectLeagueResult> {
-  const validLeagueIds = await getValidLeagueIds()
+  let validLeagueIds: number[]
+
+  try {
+    validLeagueIds = await getValidLeagueIds()
+  } catch {
+    return { ok: false, reason: NOTIFICATION_REASON.LEAGUE_LIST_UNAVAILABLE }
+  }
 
   if (!isValidLeagueId(leagueId, validLeagueIds)) {
     return { ok: false, reason: NOTIFICATION_REASON.LEAGUE_SELECT_UNAVAILABLE }

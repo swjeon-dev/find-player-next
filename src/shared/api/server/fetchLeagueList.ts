@@ -5,8 +5,9 @@ import { getFirebaseURLPath } from '@/shared/config/firebasePath'
 import FIREBASE_API_ENDPOINT from '@/shared/config/firebaseRoute'
 
 const LEAGUE_LIST_REVALIDATE_SECONDS = 60 * 60
+const LEAGUE_LIST_FETCH_MAX_ATTEMPTS = 2
 
-export async function fetchLeagueListServer(): Promise<Record<string, ILeague>> {
+async function fetchLeagueListOnce(): Promise<Record<string, ILeague>> {
   const path = getFirebaseURLPath(FIREBASE_API_ENDPOINT.LEAGUE_LIST)
   const url = `${FIREBASE_API_CONFIG.FIREBASE_API_BASE_URL}${path}`
 
@@ -20,4 +21,20 @@ export async function fetchLeagueListServer(): Promise<Record<string, ILeague>> 
   }
 
   return response.json() as Promise<Record<string, ILeague>>
+}
+
+export async function fetchLeagueListServer(): Promise<Record<string, ILeague>> {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < LEAGUE_LIST_FETCH_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await fetchLeagueListOnce()
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Failed to fetch league list')
 }

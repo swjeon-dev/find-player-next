@@ -78,7 +78,8 @@
 
 #### 미완료
 
-- [ ] **`leagueDto` empty / proxy fetch 실패 정책** — empty `[]` 처리·API 오류 시 proxy fail-open 여부 확정
+- [x] **`leagueDto` empty / fetch 정책** — `fetchLeaguesInfoServer` (retry 1회, `LeagueListError`)
+- [x] **proxy fetch 실패** — fail-closed + `LEAGUE_LIST_UNAVAILABLE` flash
 - [x] **submission server prefetch 제거** — modal client prefetch + skeleton (§9-9-5)
 - [ ] **Route Handler + `revalidate`** (선택) — RTDB BFF·서버 캐시
 

@@ -1,6 +1,4 @@
-import { fetchLeagueListServer } from '@/shared/api/server/fetchLeagueList'
-
-import { leagueDto } from './leagueDto'
+import { fetchLeaguesInfoServer } from './leagueList.server'
 
 export function parseLeagueIdCookie(value: string | undefined): number | null {
   if (!value) return null
@@ -12,9 +10,9 @@ export function parseLeagueIdCookie(value: string | undefined): number | null {
 }
 
 export async function getValidLeagueIds(): Promise<number[]> {
-  const leagues = await fetchLeagueListServer()
+  const leaguesInfo = await fetchLeaguesInfoServer()
 
-  return leagueDto(leagues).map(league => league.id)
+  return leaguesInfo.map(league => league.id)
 }
 
 export function isValidLeagueId(
