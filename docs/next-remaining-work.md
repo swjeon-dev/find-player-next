@@ -165,6 +165,7 @@ docs/next-migration.md             ← 전환 이력·상세 가이드
 | 문서 | 역할 |
 | ---- | ---- |
 | [`next-migration.md`](./next-migration.md) | 전환 **이력·완료·상세 가이드** (§8–§11) |
+| [`tech-decisions.md`](./tech-decisions.md) | 기술·라이브러리 **선택 이유** (포트폴리오·면접) |
 | **본 문서** | **남은 작업·우선순위·체크리스트** |
 | [`portfolio.md`](./portfolio.md) | 포트폴리오·성과 요약 |
 
