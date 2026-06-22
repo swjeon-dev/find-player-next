@@ -1,9 +1,10 @@
-import '@/app/styles'
+import '@/app/styles/global.css'
 
 import type { Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
-import { Header } from '@/shared/ui/layout'
+import { Header, MainContainer } from '@/shared/ui/layout'
+import { FlashToastView, NotificationView } from '@/shared/ui'
 
 export const metadata: Metadata = {
   title: {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'up1' }],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body>
         <Providers>
           <Header />
-          <main>{children}</main>
+          <MainContainer>{children}</MainContainer>
         </Providers>
+        <FlashToastView />
+        <NotificationView />
 
         <div id='modal-root' />
       </body>

@@ -1,56 +1,46 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSetRecoilState } from 'recoil'
-import type { StaticImageData } from 'next/image'
+import { unstable_rethrow } from 'next/navigation'
+import { useRef, useTransition } from 'react'
 
-import { ROUTER_PATH } from '@/shared'
-import { leagueInfoState } from './leagueInfoState'
-
-export interface LeagueListItem {
-  name: string
-  id: number
-  emblem: StaticImageData
-}
+import { selectLeagueAction } from '@/entities/league/actions/selectLeagueAction'
+import { showNotificationReason } from '@/shared'
+import type { ILeagueInfo } from '@common/model'
 
 export default function useLeagueSelectModal() {
-  const [isOpen, setIsOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const router = useRouter()
-  const setLeagueInfo = useSetRecoilState(leagueInfoState)
+  const [isSelecting, startTransition] = useTransition()
 
-  const openModal = useCallback(() => {
-    setIsOpen(true)
-  }, [])
+  const openModal = () => {
+    if (!dialogRef.current) return
+    dialogRef.current.showModal()
+    dialogRef.current.scrollTo({ top: 0 })
+  }
 
-  const closeModal = useCallback(() => {
-    dialogRef.current?.close()
-    setIsOpen(false)
-  }, [])
+  const closeModal = () => {
+    if (!dialogRef.current) return
+    dialogRef.current.close()
+  }
 
-  const setLeagueRange = useCallback(
-    (league: LeagueListItem) => {
-      setLeagueInfo({ id: league.id })
-      router.push(ROUTER_PATH.SUBMISSION)
-    },
-    [router, setLeagueInfo],
-  )
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    if (dialogRef.current && !dialogRef.current.open) {
-      dialogRef.current.showModal()
-      dialogRef.current.scrollTo({ top: 0 })
-    }
-  }, [isOpen])
+  const selectLeague = (leagueId: ILeagueInfo['id']) => {
+    startTransition(async () => {
+      try {
+        const result = await selectLeagueAction(leagueId)
+        if (!result.ok) {
+          closeModal()
+          showNotificationReason(result.reason)
+        }
+      } catch (error) {
+        unstable_rethrow(error)
+      }
+    })
+  }
 
   return {
-    isOpen,
     dialogRef,
     openModal,
     closeModal,
-    setLeagueRange,
+    selectLeague,
+    isSelecting,
   }
 }

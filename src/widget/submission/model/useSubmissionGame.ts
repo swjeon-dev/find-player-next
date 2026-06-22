@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useSetRecoilState } from 'recoil'
 
-import { inputState } from '@/entities/search'
+import { useInputStore } from '@/entities/search'
 import type { IHint } from '@/shared'
 
 interface IUseSubmissionGameProps {
@@ -14,7 +13,7 @@ const useSubmissionGame = ({ generateQuiz }: IUseSubmissionGameProps) => {
   const [hintArr, setHintArr] = useState<IHint[]>([])
   const [isCorrect, setIsCorrect] = useState(false)
 
-  const setInputValue = useSetRecoilState(inputState)
+  const setInputValue = useInputStore(state => state.setValue)
 
   const resetQuiz = () => {
     setIsCorrect(false)

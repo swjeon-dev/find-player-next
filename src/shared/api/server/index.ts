@@ -1,0 +1,1 @@
+export { fetchLeagueListServer } from './fetchLeagueList'

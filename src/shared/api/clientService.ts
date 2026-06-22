@@ -1,9 +1,10 @@
-import type { IFirebasePlayer, IFirebaseTeamDetail } from '@common/model'
+import type {
+  IFirebasePlayer,
+  IFirebaseTeamDetail,
+  ILeague,
+} from '@common/model'
 import FIREBASE_API_ENDPOINT from '../config/firebaseRoute'
-import {
-  getFirebaseURLPath,
-  type FirebaseReturnPath,
-} from '../config/firebasePath'
+import { getFirebaseURLPath } from '../config/firebasePath'
 import { firebaseApiInstance } from './client'
 
 export type FilteringPlayerNode = {
@@ -12,7 +13,7 @@ export type FilteringPlayerNode = {
 
 export type FilteringPlayersByNameRaw = Record<string, FilteringPlayerNode>
 
-const fetchFirebaseData = async <T>(path: FirebaseReturnPath): Promise<T> => {
+const fetchFirebaseData = async <T>(path: string): Promise<T> => {
   const response = await firebaseApiInstance.get<T>(path)
 
   return response.data
@@ -26,6 +27,13 @@ export const fetchTeam = async (
   return await fetchFirebaseData<IFirebaseTeamDetail>(getFirebaseURLPath(url))
 }
 
+export const fetchLeagueList = async (): Promise<Record<string, ILeague>> => {
+  const url = FIREBASE_API_ENDPOINT.LEAGUE_LIST
+
+  return await fetchFirebaseData<Record<string, ILeague>>(
+    getFirebaseURLPath(url),
+  )
+}
 export const fetchTeamIdsInLeague = async (
   leagueId: number,
 ): Promise<number[]> => {
@@ -51,6 +59,7 @@ export const fetchTeamPlayerIds = async (teamId: number): Promise<number[]> => {
 export const fetchPlayerIdsInLeague = async (
   leagueId: number,
 ): Promise<number[]> => {
+  if (!leagueId) return []
   const url = FIREBASE_API_ENDPOINT.LEAGUE_PLAYER_IDS(leagueId)
 
   return await fetchFirebaseData<number[]>(getFirebaseURLPath(url))
@@ -72,7 +81,7 @@ export const fetchFilteringPlayersByName = async ({
     endAt: JSON.stringify(`${capitalizedValue}\uf8ff`),
   })
 
-  const pathWithQuery =
-    `${getFirebaseURLPath(url)}?${params.toString()}` as FirebaseReturnPath
+  const pathWithQuery = `${getFirebaseURLPath(url)}?${params.toString()}`
+
   return await fetchFirebaseData<FilteringPlayersByNameRaw>(pathWithQuery)
 }

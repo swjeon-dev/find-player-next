@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 
 import { SubmissionView } from '@/widget'
-
-export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: '퀴즈',
@@ -10,6 +9,8 @@ export const metadata: Metadata = {
   keywords: ['퀴즈', '선수'],
 }
 
-export default function Submission() {
-  return <SubmissionView />
+export default async function SubmissionPage() {
+  const leagueId = Number((await cookies()).get('league-id')?.value)
+
+  return <SubmissionView leagueId={leagueId} />
 }

@@ -16,6 +16,11 @@ export const syncData = async (): Promise<void> => {
   console.log('Firebase의 데이터 동기화 작업을 시작합니다')
 
   try {
+    // TODO: 리그 목록 동기화 추가
+    // const leagueList = await fetchLeagueList()
+    // if (!leagueList || leagueList.length === 0)
+    //   throw new Error('리그 목록을 가져오지 못했습니다.')
+
     const leagueTableData = await fetchLeagueTableData(DEFAULT_API_PARAMS)
 
     if (!leagueTableData || leagueTableData.length === 0)

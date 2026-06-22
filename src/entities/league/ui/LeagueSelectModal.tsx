@@ -1,30 +1,42 @@
 'use client'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
 
-import { createPortal } from 'react-dom'
-
+import { NOTIFICATION_REASON, showNotificationReason } from '@/shared'
 import useLeagueSelectModal from '../model/useLeagueSelectModal'
-import usePrefetchLeagueData from '../model/usePrefetchLeagueData'
 import LeagueSelectModalContent from './LeagueSelectModalContent'
 import LeagueSelectModalTrigger from './LeagueSelectModalTrigger'
+import type { ILeagueInfo } from '@common/model'
 
-function LeagueSelectModal() {
-  const { isOpen, dialogRef, openModal, closeModal, setLeagueRange } =
+function LeagueSelectModal({ leaguesInfo }: { leaguesInfo: ILeagueInfo[] }) {
+  const router = useRouter()
+  const [isRefreshing, startTransition] = useTransition()
+  const { dialogRef, openModal, closeModal, selectLeague, isSelecting } =
     useLeagueSelectModal()
-  const { prefetchingLeagueData } = usePrefetchLeagueData()
+
+  const handleOpen = () => {
+    if (leaguesInfo.length === 0) {
+      showNotificationReason(NOTIFICATION_REASON.LEAGUE_LIST_UNAVAILABLE)
+      startTransition(() => {
+        router.refresh()
+      })
+      return
+    }
+    openModal()
+  }
 
   return (
     <>
-      <LeagueSelectModalTrigger openModal={openModal} />
-      {isOpen &&
-        createPortal(
-          <LeagueSelectModalContent
-            dialogRef={dialogRef}
-            closeModal={closeModal}
-            setLeagueRange={setLeagueRange}
-            onPrefetch={prefetchingLeagueData}
-          />,
-          document.getElementById('modal-root') as HTMLElement,
-        )}
+      <LeagueSelectModalTrigger
+        onOpen={handleOpen}
+        disabled={isRefreshing || isSelecting}
+      />
+      <LeagueSelectModalContent
+        leaguesInfo={leaguesInfo}
+        dialogRef={dialogRef}
+        onClose={closeModal}
+        onSelectLeague={selectLeague}
+      />
     </>
   )
 }

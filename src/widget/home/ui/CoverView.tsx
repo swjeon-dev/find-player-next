@@ -1,8 +1,9 @@
 import { LeagueSelectModal } from '@/entities/league'
 
 import styles from './CoverView.module.css'
+import type { ILeagueInfo } from '@common/model'
 
-function CoverView() {
+function CoverView({ leaguesInfo }: { leaguesInfo: ILeagueInfo[] }) {
   return (
     <section
       className={styles['container']}
@@ -11,7 +12,7 @@ function CoverView() {
       <h2 className={styles['title']} id='cover-game-heading'>
         Game Start
       </h2>
-      <LeagueSelectModal />
+      <LeagueSelectModal leaguesInfo={leaguesInfo} />
     </section>
   )
 }
