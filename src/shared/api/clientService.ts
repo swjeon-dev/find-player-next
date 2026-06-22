@@ -4,10 +4,7 @@ import type {
   ILeague,
 } from '@common/model'
 import FIREBASE_API_ENDPOINT from '../config/firebaseRoute'
-import {
-  getFirebaseURLPath,
-  type FirebaseReturnPath,
-} from '../config/firebasePath'
+import { getFirebaseURLPath } from '../config/firebasePath'
 import { firebaseApiInstance } from './client'
 
 export type FilteringPlayerNode = {
@@ -16,7 +13,7 @@ export type FilteringPlayerNode = {
 
 export type FilteringPlayersByNameRaw = Record<string, FilteringPlayerNode>
 
-const fetchFirebaseData = async <T>(path: FirebaseReturnPath): Promise<T> => {
+const fetchFirebaseData = async <T>(path: string): Promise<T> => {
   const response = await firebaseApiInstance.get<T>(path)
 
   return response.data
@@ -84,7 +81,7 @@ export const fetchFilteringPlayersByName = async ({
     endAt: JSON.stringify(`${capitalizedValue}\uf8ff`),
   })
 
-  const pathWithQuery =
-    `${getFirebaseURLPath(url)}?${params.toString()}` as FirebaseReturnPath
+  const pathWithQuery = `${getFirebaseURLPath(url)}?${params.toString()}`
+
   return await fetchFirebaseData<FilteringPlayersByNameRaw>(pathWithQuery)
 }
