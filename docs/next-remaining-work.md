@@ -1,13 +1,19 @@
 # Next.js 전환 — 남은 작업
 
 > **완료·이력·상세 가이드**는 [`next-migration.md`](./next-migration.md) 를 참고합니다.  
-> 본 문서는 **아직 하지 않은 작업**만 모아 우선순위와 함께 정리합니다. (2026-06 기준)
+> 본 문서는 **아직 하지 않은 작업**만 모아 우선순위와 함께 정리합니다. (2026-06-22 갱신)
 
 ---
 
-## 현재까지 완료 요약 (기준선)
+## 프로젝트 상태 요약
 
-마이그레이션 **핵심 전환은 완료**된 상태입니다. 배포·동작을 막는 블로커는 없습니다.
+- **핵심 마이그레이션 완료** — App Router, CSS Modules, Zustand, `proxy.ts` 가드, cookie `leagueId`
+- **배포·동작을 막는 블로커 없음**
+- 상세 이력: [`next-migration.md`](./next-migration.md)
+
+---
+
+## 현재까지 완료 요약
 
 | 영역 | 완료 |
 | ---- | ---- |
@@ -19,20 +25,12 @@
 | 모달 | ref-only + `mounted` hydration gate (§10) |
 | 알림 | `FlashToastView` (redirect flash) · `NotificationView` (in-app, 리그 선택·목록 실패) |
 | submission 데이터 | server prefetch **제거** → modal hover prefetch + client skeleton (§9-9-5) |
+| P0 신뢰성·보안 | `leagueId` 검증, `leagueDto` empty/fetch 정책, proxy fetch fail-closed |
+| 전역 route boundary | `app/loading.tsx` (스피너), `app/error.tsx` — `widget/route-state/` |
+| proxy (Next 16) | 루트 `proxy.ts`, `export async function proxy` (named export) |
+| CoverView a11y | sr-only `h2` 제거 → `LeagueSelectModalTrigger` `aria-label` |
 
----
-
-## 남은 작업 — 우선순위
-
-### P0 — 신뢰성·보안
-
-| # | 작업 | 상태 |
-| - | ---- | ---- |
-| 1 | **`leagueId` 검증** (Action + proxy) | ✅ `getValidLeagueIds` / `isValidLeagueId` 공유 |
-| 2 | **`leagueDto` empty / fetch 정책** | ✅ `fetchLeaguesInfoServer` — 1회 retry, empty·fetch 실패 시 `LeagueListError` |
-| 3 | **proxy fetch 실패** | ✅ fail-closed — `/` redirect + `LEAGUE_LIST_UNAVAILABLE` flash (cookie 유지) |
-
-**정책 요약**
+**P0 정책 요약**
 
 | 계층 | fetch/empty 실패 | invalid id |
 | ---- | ---------------- | ---------- |
@@ -40,20 +38,20 @@
 | `selectLeagueAction` | `LEAGUE_LIST_UNAVAILABLE` Notification | `LEAGUE_SELECT_UNAVAILABLE` |
 | `proxy.ts` | flash + redirect (cookie 유지) | flash + cookie 삭제 |
 
-**관련 파일:** `leagueList.server.ts`, `leagueValidation.ts`, `proxy.ts`, `app/page.tsx`, `selectLeagueAction.ts`
-
 ---
 
-### P1 — API·성능 (axios → fetch 이후 파이프라인)
+## 남은 작업 — 우선순위
+
+### P1 — API·성능
 
 | # | 작업 | 현재 | 기대 효과 |
 | - | ---- | ---- | --------- |
-| 4 | **axios → fetch 전환** | `shared/api/client.ts` — `firebaseApiInstance` (axios). RSC·서버에서 **재사용 불가** | 서버/클라이언트 공용 fetch 계층, 번들·일관성 |
-| 5 | **서버 fetch 모듈 분리** | `clientService.ts`가 client axios에 의존 | `shared/api/server` (RSC, Action, Route Handler) / client 분리 |
-| 6 | **Route Handler BFF + `revalidate`** (§9 Phase 5) | 클라이언트가 RTDB URL(`NEXT_PUBLIC_`)로 **직접** 호출 | 서버 캐시, RTDB hit 감소, URL·키 **브라우저 비노출** |
-| 7 | **홈 `fetchLeagueList` 캐시** | 요청마다 RSC fetch | `unstable_cache` / `revalidate` — 리그 목록은 변경 빈도 낮음 |
+| 1 | **axios → fetch 전환** | `shared/api/client.ts` — `firebaseApiInstance` (axios) | 서버/클라이언트 공용 fetch, 번들·일관성 |
+| 2 | **서버 fetch 모듈 분리** | `fetchLeagueListServer`만 fetch, `clientService.ts`는 axios 의존 | `shared/api/server` / client 분리 |
+| 3 | **Route Handler BFF + `revalidate`** (§9 Phase 5) | 클라이언트 RTDB 직접 호출, `app/api/` 없음 | 서버 캐시, RTDB hit 감소, URL 비노출 |
+| 4 | **홈 리그 목록 캐시** | `fetchLeagueListServer`에 `revalidate: 1h` 적용됨 | 나머지 API·`unstable_cache` 검토 |
 
-**관련 파일:** `shared/api/`, `app/page.tsx`, `app/api/` (신규)
+**관련 파일:** `src/shared/api/`, `app/page.tsx`, `app/api/` (신규)
 
 ---
 
@@ -61,11 +59,12 @@
 
 | # | 작업 | 현재 | 기대 효과 |
 | - | ---- | ---- | --------- |
-| 8 | **`loading.tsx`** | 라우트별 없음 | `/submission` `router.refresh()`·첫 진입 시 **스트리밍·스켈레톤** |
-| 9 | **`error.tsx`** | 라우트별 없음 | RSC fetch·치명 오류 시 **복구 UI** (지금은 widget 내부 loader/error 산발적) |
-| 10 | **`next/image`** | 리그 엠블럼 `<img src={league.logo}>` | LCP·lazy·리사이즈 (`next.config` `images.remotePatterns` 필요) |
-| 11 | **Suspense 경계** | `ClubSquadModal` lazy만 | `ClubViews` / `SubmissionGameContainer` 등 **구간별 스트리밍** |
-| 12 | **submission cold visit** | server prefetch 제거 → modal prefetch 없으면 skeleton | 직접 URL·새로고침 시 **ID 목록 지연** — 가벼운 RSC prefetch **재검토** (§9-9) |
+| 5 | **전역 loading / error** | ✅ `app/loading.tsx`, `app/error.tsx` | — |
+| 6 | **`app/submission/loading.tsx`** | 없음 | submission 전용 스트리밍·로딩 |
+| 7 | **`app/submission/error.tsx`** | 없음 | submission 전용 복구 UI |
+| 8 | **`next/image`** | `<img>` 사용 (`LeagueSelectItem`, `Club` 등) | LCP·lazy (`remotePatterns` 필요) |
+| 9 | **Suspense 경계** | `ClubSquadModal` lazy만 | `ClubViews` / `SubmissionGameContainer` 등 구간별 스트리밍 |
+| 10 | **submission cold visit** | server prefetch 제거 상태 | 직접 URL·새로고침 시 ID 목록 지연 — 가벼운 RSC prefetch 재검토 (§9-9) |
 
 **관련 파일:** `app/submission/`, `LeagueSelectItem.tsx`, `widget/submission/`, `widget/club/`
 
@@ -75,9 +74,9 @@
 
 | # | 작업 | 현재 |
 | - | ---- | ---- |
-| 13 | **Vercel(또는 호스트) 배포** | 미연동 |
-| 14 | **env·도메인** | `NEXT_PUBLIC_*` RTDB URL — BFF 전환 전까지 클라이언트 노출 |
-| 15 | **`next-migration.md` 진행 현황 동기화** | §9 `ToastView`·`league.constants` 등 구식 문구 — **2026-06 부분 반영** |
+| 11 | **Vercel(또는 호스트) 배포** | 미연동 (`deploy.yml__` 비활성) |
+| 12 | **env·도메인** | BFF 전까지 RTDB URL 클라이언트 노출 |
+| 13 | **`next-migration.md` 진행 현황 동기화** | §9 등 구식 문구 잔존 |
 
 ---
 
@@ -87,9 +86,10 @@
 | ---- | ---- |
 | **동적 metadata** | submission 등 `generateMetadata` + cookie `leagueId` |
 | **Parallel route `@modal`** | modal ↔ URL·뒤로가기 연동 |
-| **quiz store SSR 패턴 통일** | league와 동일 `skipHydration` + rehydrate (§8-6, 실질 영향 제한적) |
+| **quiz store SSR 패턴 통일** | league와 동일 `skipHydration` + rehydrate (§8-6) |
 | **barrel import 정리** | `@/widget` 등 client 번들 경계 (§5-3) |
 | **리그 many 시** | modal 리스트 가상화 (§10) |
+| **functions 리그 동기화** | `functions/src` 리그 목록 동기화 TODO |
 
 ---
 
@@ -106,9 +106,31 @@
 ```text
 1. axios → fetch + server fetch 모듈 분리          ← P1
 2. Route Handler BFF + revalidate (리그·id 목록)    ← P1
-3. loading / error boundary                        ← P2
+3. submission loading/error (필요 시)              ← P2
 4. next/image, Suspense 세분화                     ← P2
-5. 배포                                              ← P3
+5. Vercel 배포                                     ← P3
+```
+
+---
+
+## 알려진 이슈 (앱 버그 아님)
+
+| 증상 | 원인·대응 |
+| ---- | --------- |
+| React DevTools 콘솔 경고 (`Suspense boundary`) | React 19 + `useTransition` / `router.refresh()` + DevTools 확장 — 시크릿·확장 비활성으로 재현 확인 |
+| `adapterFn is not a function` (proxy) | Turbopack 캐시·중복 dev 서버 — `.next` 삭제, dev 단일 인스턴스, `export async function proxy` 유지 |
+
+---
+
+## 주요 파일 맵
+
+```text
+app/loading.tsx, app/error.tsx     ← 전역 boundary
+proxy.ts                           ← leagueId 가드 (named export, 프로젝트 루트)
+src/shared/api/client.ts           ← axios (미전환)
+src/shared/api/server/             ← fetch (리그 목록)
+src/widget/route-state/            ← LoadingView, ErrorView
+docs/next-migration.md             ← 전환 이력·상세 가이드
 ```
 
 ---
@@ -120,12 +142,16 @@
 [x] proxy.ts — API 목록 기반 leagueId 검증 + invalid cookie 삭제 + FlashToast
 [x] leagueDto empty / fetch 실패 — fetchLeaguesInfoServer + LeagueListError
 [x] proxy fetch 실패 — fail-closed + LEAGUE_LIST_UNAVAILABLE flash
+[x] proxy.ts — Next 16 named export (`export async function proxy`)
+[x] app/loading.tsx — 전역 LoadingView (스피너)
+[x] app/error.tsx — 전역 ErrorView
+[x] widget/route-state 슬라이스
 [ ] axios → fetch (shared/api)
-[ ] server fetch 모듈 분리
+[ ] server fetch 모듈 분리 (clientService axios 제거)
 [ ] Route Handler BFF + revalidate
-[ ] 홈 fetchLeagueList 캐시
+[ ] 홈 fetchLeagueList 캐시 (unstable_cache 등 추가 검토)
 [ ] app/submission/loading.tsx
-[ ] app/submission/error.tsx (또는 app/error.tsx)
+[ ] app/submission/error.tsx
 [ ] next/image + remotePatterns
 [ ] submission cold visit prefetch 재검토
 [ ] Vercel 배포
