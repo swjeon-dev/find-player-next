@@ -18,7 +18,7 @@ function LeagueSelectModalTrigger({
       onClick={onOpen}
       disabled={disabled}
       aria-haspopup='dialog'
-      aria-labelledby='cover-game-heading'
+      aria-label='Game Start'
     >
       <span className={styles['btn-label']}>Game Start</span>
     </button>

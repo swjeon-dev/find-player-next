@@ -41,7 +41,7 @@ function redirectHomeWithFlash(
   return response
 }
 
-async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (process.env.NEXT_PUBLIC_LHCI === 'true') {
     return NextResponse.next()
   }
@@ -77,5 +77,3 @@ async function proxy(request: NextRequest) {
 export const config = {
   matcher: ['/submission', '/submission/:path*'],
 }
-
-export default proxy
