@@ -1,4 +1,4 @@
-const FIREBASE_API_ENDPOINT = {
+const RTDB_API_ENDPOINT = {
   LEAGUE_LIST: `/leagues`,
   LEAGUE_TEAM_IDS: (leagueId: number) => `/leagues/${leagueId}/teamIds`,
   LEAGUE_PLAYER_IDS: (leagueId: number) => `/leagues/${leagueId}/playerIds`,
@@ -8,4 +8,4 @@ const FIREBASE_API_ENDPOINT = {
   TEAM_PLAYER_IDS: (teamId: number) => `/teams/${teamId}/playerIds`,
 } as const
 
-export default FIREBASE_API_ENDPOINT
+export default RTDB_API_ENDPOINT

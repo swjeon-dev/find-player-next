@@ -12,7 +12,7 @@ import {
   LEAGUE_ID_COOKIE_OPTIONS,
   NOTIFICATION_REASON,
   type NotificationReason,
-} from '@/shared'
+} from '@/shared/config'
 
 export type SelectLeagueResult =
   | { ok: true }

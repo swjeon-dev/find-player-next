@@ -1,6 +1,6 @@
 import type { ILeagueInfo } from '@common/model'
 
-import { fetchLeagueListServer } from '@/shared/api/server/fetchLeagueList'
+import { fetchLeagueListServer } from '@/shared/api/server'
 
 import { leagueDto } from './leagueDto'
 

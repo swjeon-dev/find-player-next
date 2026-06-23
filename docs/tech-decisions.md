@@ -169,15 +169,15 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 
 ---
 
-## 11. 서버 fetch — `shared/api/server` (진행 중)
+## 11. RTDB fetch — axios → native `fetch` (`shared/api`) ✅
 
 | | |
 | --- | --- |
-| **문제** | `clientService.ts`는 **axios** → RSC·proxy·Edge에서 그대로 쓰기 어려움. |
-| **선택** | `fetchLeagueListServer` (native `fetch` + `next: { revalidate: 3600 }` + 1회 retry). |
-| **이유** | 서버·Edge 공통, Next Data Cache 활용. |
-| **대안** | axios server adapter, Route Handler BFF만 |
-| **트레이드오프** | 클라이언트 조회는 아직 axios 직결 — **이중 스택** (P1에서 통합 예정). |
+| **문제** | `clientService.ts` + axios → RSC·proxy·Edge·번들에서 불리. 서버·클라이언트 캐시 정책이 다름. |
+| **선택** | `rtdbRequest` 공통 레이어 + `client/` (`cache: 'no-store'`) / `server/` (`next: { revalidate, tags }`) 분리. 앱 루트 `axios` 제거. config `firebase*` → `rtdb*`. |
+| **이유** | 서버는 Next Data Cache, 클라이언트는 React Query persist. 동일 RTDB URL·에러 처리를 한곳에서 유지. |
+| **대안** | axios 유지, Route Handler BFF만 |
+| **트레이드오프** | 동일 endpoint를 양쪽에서 쓸 때 진입점 2개 필요. 클라이언트는 `next` 옵션 불가 → BFF(§12)로 서버 캐시 공유는 별도 과제. |
 
 ---
 
@@ -192,7 +192,8 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 | **트레이드오프** | Next 서버 홉·구현 비용. 트래픽·비용 이슈 전에는 Phase 4 수준으로 충분(§9 Phase 5). |
 
 ```text
-[지금]  브라우저 ──axios──► RTDB          (클라이언트 캐시만)
+[지금]  브라우저 ──fetch(no-store)──► RTDB   (React Query 캐시)
+        RSC/proxy ──fetch(revalidate)──► RTDB (Next Data Cache)
 [BFF]   브라우저 ──RQ──► /api ──캐시──► RTDB  (서버+클라이언트 캐시)
 ```
 
