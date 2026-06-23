@@ -85,7 +85,7 @@
 
 | 작업 | 설명 |
 | ---- | ---- |
-| **동적 metadata** | submission 등 `generateMetadata` + cookie `leagueId` |
+| **동적 metadata** | ~~submission `generateMetadata`~~ ✅ | cookie `leagueId` → title.template에 리그명 |
 | **Parallel route `@modal`** | modal ↔ URL·뒤로가기 연동 |
 | **quiz store SSR 패턴 통일** | league와 동일 `skipHydration` + rehydrate (§8-6) |
 | **barrel import 정리** | `@/widget` 등 client 번들 경계 (§5-3) |

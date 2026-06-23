@@ -234,6 +234,27 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 
 ---
 
+## 16. App Router — client 중심, RSC는 얇은 서버 셸
+
+| | |
+| --- | --- |
+| **서비스 특성** | prefix 검색·팀 hover·퀴즈·자동완성 등 **상호작용·클라이언트 조회**가 UX의 대부분. |
+| **선택** | **조회·UI → React Query + Zustand (client)**. **가드·검증·리그 목록 → cookie, proxy, Server Action, server fetch (RSC/Edge)**. |
+| **이유** | RTDB 다단계 id 조회·hover prefetch·persist로 happy path는 **client가 이미 담당**. submission RSC prefetch는 server·client RQ **캐시 비공유**로 중복 fetch·전환 지연 (§10). |
+| **대안** | 전면 RSC + useSuspenseQuery, BFF + 공유 캐시, segment loading/error |
+| **트레이드오프** | App Router **전면 이점**(스트리밍·ISR·대규모 RSC)은 활용하지 않음. Next 가치는 **proxy·Action·Data Cache·배포**에 집중. cold visit은 skeleton 수용 (§15). **추가 마이그레이션 ROI 낮음** — BFF·RSC 확대 보류 (§12). |
+
+```text
+leagueId (세션·가드)  → cookie + proxy + Server Action
+catalog (팀·선수)     → React Query (client, prefetch·persist)
+퀴즈 UI 상태          → Zustand
+RSC 데이터            → 홈 리그 목록, submission leagueId prop, generateMetadata(리그명)
+```
+
+**면접 한 줄:** 퀴즈·검색 중심이라 데이터·UI는 **client**, Next는 **가드와 검증이 필요한 얇은 서버 셸**로 썼다.
+
+---
+
 ## 요약 표 (면접 스캔용)
 
 | 영역 | 선택 | 핵심 이유 |
@@ -248,6 +269,7 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 | 스타일 | CSS Modules | RSC·빌드 타임 CSS |
 | 리그 검증 | API 목록 | 상수·UI·RTDB 불일치 방지 |
 | submission prefetch | client 우선 | server·client RQ 캐시 비공유 |
+| App Router 범위 | client 중심 + 얇은 RSC | 퀴즈·검색 UX는 client, 가드·검증만 server (§16) |
 | RTDB 이미지 | `next/image` + `remotePatterns` | 리사이즈·포맷 최적화, submission LCP `priority` |
 
 ---
