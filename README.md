@@ -1,13 +1,14 @@
 # ⚽ Find Football Player Quiz
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://find-player-next.vercel.app/) ![Deploy Status](https://img.shields.io/github/actions/workflow/status/swjeon-dev/find-player-game/deploy.yml?branch=master&style=flat-square&label=Deploy&logo=GitHub%20Actions&logoColor=white)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://find-player-next.vercel.app/) ![Lighthouse CI](https://img.shields.io/github/actions/workflow/status/swjeon-dev/find-player-next/lighthouse.yml?branch=main&style=flat-square&label=Lighthouse&logo=Lighthouse&logoColor=white)
 
 블러 처리된 프리미어리그 선수 사진을 보고 이름을 맞히는 **축구 선수 퀴즈**입니다.  
-**CRA + JavaScript**로 시작한 프로젝트를 **Vite + TypeScript**로 옮기고, API·DB 제약 속에서도 **쓰기 편한 검색·퀴즈 경험**을 만드는 데 집중했습니다.
+**CRA + JavaScript** → **Vite + TypeScript** → **Next.js App Router**로 옮기며, API·DB 제약 속에서도 **쓰기 편한 검색·퀴즈 경험**을 만드는 데 집중했습니다.
 
 ## 데모
 
-- [Live Demo](https://swjeon-dev.github.io/find-player-game/)
+- **Live (Vercel):** [find-player-next.vercel.app](https://find-player-next.vercel.app/)
+- **이전 (GitHub Pages, Vite SPA):** [swjeon-dev.github.io/find-player-game](https://swjeon-dev.github.io/find-player-game/)
 - [시연 영상](https://github.com/user-attachments/assets/37036cd6-3ea5-42fa-837c-c987919557b6)
 
 [![Quiz Demo Thumbnail](src/assets/imgs/auto-complete.webp)](https://github.com/user-attachments/assets/37036cd6-3ea5-42fa-837c-c987919557b6)
@@ -28,7 +29,7 @@
 
 ## 기술 스택
 
-React · TypeScript · Next.js · CSS Modules · React Query · Zustand · Firebase · GitHub Actions
+React · TypeScript · Next.js · CSS Modules · React Query · Zustand · Firebase · Vercel · GitHub Actions
 
 ## 실행
 

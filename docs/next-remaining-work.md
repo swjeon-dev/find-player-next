@@ -6,7 +6,7 @@
 ## 프로젝트 상태 요약
 
 - **핵심 마이그레이션 완료** — App Router, CSS Modules, Zustand, `proxy.ts` 가드, cookie `leagueId`
-- **배포·동작을 막는 블로커 없음**
+- **배포 완료** — [Vercel](https://find-player-next.vercel.app/) · Speed Insights
 - 상세 이력: [`next-migration.md`](./next-migration.md)
 
 ---
@@ -28,6 +28,7 @@
 | 전역 route boundary | `app/loading.tsx` (스피너), `app/error.tsx` — `widget/route-state/` |
 | proxy (Next 16) | 루트 `proxy.ts`, `export async function proxy` (named export) |
 | CoverView a11y | sr-only `h2` 제거 → `LeagueSelectModalTrigger` `aria-label` |
+| 배포·관측 | Vercel · `@vercel/speed-insights` (§17) |
 
 **P0 정책 요약**
 
@@ -73,8 +74,8 @@
 
 | # | 작업 | 현재 |
 | - | ---- | ---- |
-| 11 | **Vercel(또는 호스트) 배포** | 미연동 (`deploy.yml__` 비활성) |
-| 12 | **env·도메인** | RTDB read-only 공개 카탈로그 — 클라이언트 직접 호출 수용 (BFF 보류) |
+| 11 | ~~**Vercel 배포**~~ ✅ | [find-player-next.vercel.app](https://find-player-next.vercel.app/) · Speed Insights |
+| 12 | ~~**env·도메인**~~ ✅ | RTDB read-only — 클라이언트 직접 호출 (BFF 보류) |
 | 13 | ~~**`next-migration.md` 진행 현황 동기화**~~ ✅ | §9 prefetch 제거·submission UX(§15) 반영 |
 
 ---
@@ -108,7 +109,7 @@
 2. ~~Route Handler BFF~~ 보류 (규모·ROI — §12)
 3. ~~submission UX (skeleton·error·Suspense·cold visit)~~ ✅ (§15)
 4. ~~next/image~~ ✅
-5. Vercel 배포                                     ← P3
+5. ~~Vercel 배포~~ ✅ · Speed Insights
 ```
 
 ---
@@ -118,6 +119,7 @@
 | 증상 | 원인·대응 |
 | ---- | --------- |
 | React DevTools 콘솔 경고 (`Suspense boundary`) | React 19 + `useTransition` / `router.refresh()` + DevTools 확장 — 시크릿·확장 비활성으로 재현 확인 |
+| Speed Insights FCP·LCP ~2s (submission) | **RUM** — cold visit·client RTDB fetch·선수 이미지 LCP. Lab(Lighthouse)과 다름. [portfolio §perf-vercel](./portfolio.md#perf-vercel) |
 | `adapterFn is not a function` (proxy) | Turbopack 캐시·중복 dev 서버 — `.next` 삭제, dev 단일 인스턴스, `export async function proxy` 유지 |
 
 ---
@@ -167,7 +169,7 @@ scripts/compare-next-image-lighthouse.mjs  ← img vs next/image Lighthouse 비�
 [x] submission cold visit — skeleton + persist (server prefetch·segment loading 미도입)
 [x] submission generateMetadata — 리그명 title.template
 [x] app/ widget barrel — 슬라이스 직접 import (`@/widget/home` 등)
-[ ] Vercel 배포
+[x] Vercel 배포 + Speed Insights (`@vercel/speed-insights`)
 [x] next-migration.md §9 진행 현황·아키텍처 표 동기화 (prefetch 제거·§15)
 ```
 

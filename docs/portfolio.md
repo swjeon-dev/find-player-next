@@ -38,7 +38,7 @@ CRA + JavaScript로 만들어 두었던 퀴즈를 **Vite + TypeScript**로 옮�
 
 **사용 기술** — React, TypeScript, Next.js, React Query, Zustand, CSS Modules, Firebase
 
-**배포** — GitHub Pages (CSR 시절, [라우팅 이슈](#csr-github-pages) 경험) → Next App Router 전환 후 Vercel 배포 예정
+**배포** — GitHub Pages (CSR 시절, [라우팅 이슈](#csr-github-pages)) → **[Vercel](https://find-player-next.vercel.app/)** (Next App Router, Speed Insights)
 
 **Next 전환 후 선택 이유 (cookie, proxy, Server Action 등)** — [`tech-decisions.md`](./tech-decisions.md)
 
@@ -363,6 +363,45 @@ FCP·Speed Index는 **0.3~0.4초 정도 느리게** 나왔습니다. 첫 페인�
 
 > 네트워크·Firebase 응답에 따라 LCP는 실행마다 달라질 수 있습니다. 수치는 “완벽한 재현”보다 **개선 방향을 보여 주는 1회 측정**입니다.
 
+<a id="perf-vercel"></a>
+
+#### Vite SPA (GH Pages) vs Next (Vercel) — production 1회 (2026-06)
+
+> **주의:** 아래 [리팩터링 전·후](#perf-compare) 표(LCP 24s→3s)는 **Next 이전** Vite 구조 변경 효과입니다.  
+> 이 절은 **최적화된 Vite 데모**와 **Vercel Next** 비교입니다.
+
+**홈 `/`**
+
+| 지표 | GH Pages (Vite) | Vercel (Next) |
+| ---- | --------------- | ------------- |
+| Performance | 98 | 100 |
+| FCP | 1.9 s | **0.8 s** |
+| LCP | 1.9 s | 1.8 s |
+| TBT | **0 ms** | 60 ms |
+
+**submission `/submission`**
+
+| | GH Pages | Vercel |
+| -- | -------- | ------ |
+| 직링크·새로고침 | **404** (정적 호스팅) | proxy + cookie 가드 후 렌더 |
+| Lighthouse (1회, `league-id=39`) | 측정 불가 | Perf 80 · LCP **4.4 s** |
+
+Next 전환의 체감 이득은 홈 LCP 한 자리보다 **URL 안정성·가드·metadata·`next/image`** 쪽에 큽니다. submission LCP는 **의도적으로 client fetch + skeleton**이라 Lab에서 3~5s대가 나올 수 있습니다.
+
+#### Speed Insights — FCP·LCP가 ~2s로 보이는 이유
+
+[Vercel Speed Insights](https://vercel.com/docs/speed-insights)는 **실제 사용자(RUM)** 를 집계합니다. 로컬 Lighthouse(합성)와 다릅니다.
+
+| 요인 | 설명 |
+| ---- | ---- |
+| **측정 대상** | 주로 `/submission` — LCP 후보가 **선수 사진** (`SubmissionCard` + `next/image` `priority`) |
+| **cold visit** | server prefetch 없음 → HTML·JS 후 **RTDB 다단계 fetch** → `player` 도착 후 이미지 요청 |
+| **LCP 정의** | “가장 큰 콘텐츠가 그려진 시점” — skeleton·blur 이미지 전까지 **대기 시간 포함** |
+| **RUM 특성** | 지역·네트워크·기기·캐시 miss 반영. **P75** 등 집계면 ~2s는 흔함 |
+| **happy path** | 홈에서 hover prefetch → 리그 선택 → RQ 캐시 hit 시 **체감은 더 빠름** (RUM에 cold·warm 혼재) |
+
+**정리:** ~2s는 Next 프레임워크 오버헤드만이 아니라, **퀴즈 화면의 client 데이터·이미지 로딩 체인**이 LCP에 잡히기 때문입니다. 개선하려면 server prefetch(트레이드오프 §10)·BFF·이미지 CDN 캐시 등을 검토하고, **hover prefetch 경로 비율**을 늘리는 UX 쪽이 현재 설계와 맞습니다.
+
 **규모가 큰 React 서비스라면**
 
 화면·라이브러리가 많아질수록, 같은 패턴의 의미가 커질 수 있습니다.
@@ -463,5 +502,4 @@ URL에서 서버가 해석하는 부분과 클라이언트가 해석하는 부�
 - 테스트 코드 추가 (슬라이스·public API 기준으로 어디까지 쓸지 정하기)
 - 문제·리그 다양성 확장
 - 점수·랭킹 시스템
-- Vercel 배포 (Next App Router)
 - `features` 분리 (로직·재사용이 커질 때 — 지금은 `pages` → `widget` → `entities`)

@@ -270,7 +270,20 @@ RSC 데이터            → 홈 리그 목록, submission leagueId prop, genera
 | 리그 검증 | API 목록 | 상수·UI·RTDB 불일치 방지 |
 | submission prefetch | client 우선 | server·client RQ 캐시 비공유 |
 | App Router 범위 | client 중심 + 얇은 RSC | 퀴즈·검색 UX는 client, 가드·검증만 server (§16) |
+| 배포·관측 | Vercel + Speed Insights | RUM Web Vitals. submission LCP는 client fetch 체인 반영 (§17) |
 | RTDB 이미지 | `next/image` + `remotePatterns` | 리사이즈·포맷 최적화, submission LCP `priority` |
+
+---
+
+## 17. Vercel 배포 · Speed Insights — RUM vs Lab
+
+| | |
+| --- | --- |
+| **선택** | [find-player-next.vercel.app](https://find-player-next.vercel.app/) + `@vercel/speed-insights` (`Providers`) |
+| **이유** | GH Pages CSR 한계(직링크 404) 해소. **실사용자** FCP·LCP·CLS 집계로 배포 후 체감 검증. |
+| **Lab vs RUM** | Lighthouse CI는 로컬 `next start` **합성** 측정. Speed Insights는 **실트래픽** — RTDB 지연·cold visit·지역 포함. |
+| **FCP·LCP ~2s** | submission에서 LCP = 선수 이미지. server prefetch 없이 **client RQ → player → image** 순서. 의도된 트레이드오프 (§10). 상세 [portfolio §perf-vercel](./portfolio.md#perf-vercel). |
+| **대안** | submission RSC prefetch, BFF — ROI 보류 (§12) |
 
 ---
 
