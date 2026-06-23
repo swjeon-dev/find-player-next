@@ -1,6 +1,6 @@
 import type { ILeagueInfo } from '@common/model'
 
-import { fetchLeagueListServer } from '@/shared/api/server'
+import { fetchLeagueList } from '@/shared/api/server'
 
 import { leagueDto } from './leagueDto'
 
@@ -22,7 +22,7 @@ export function isLeagueListError(error: unknown): error is LeagueListError {
 
 export async function fetchLeaguesInfoServer(): Promise<ILeagueInfo[]> {
   try {
-    const leagues = await fetchLeagueListServer()
+    const leagues = await fetchLeagueList()
     const leaguesInfo = leagueDto(leagues)
 
     if (leaguesInfo.length === 0) {
