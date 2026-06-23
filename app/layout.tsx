@@ -1,6 +1,7 @@
 import '@/app/styles/global.css'
 
 import type { Metadata } from 'next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import { Providers } from '@/app/providers'
 import { Header, MainContainer } from '@/shared/ui/layout'
@@ -32,6 +33,7 @@ export default async function RootLayout({
         <NotificationView />
 
         <div id='modal-root' />
+        <SpeedInsights />
       </body>
     </html>
   )
