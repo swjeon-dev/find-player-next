@@ -1,7 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { lazy, memo, Suspense, useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 
 import {
   Club,
@@ -9,9 +9,14 @@ import {
   useClubSquadModalTrigger,
 } from '@/entities/club'
 import type { IFirebaseTeamDetail } from '@common/model'
+import dynamic from 'next/dynamic'
 
-const prefetchClubSquadModal = () => import('./ClubSquadModal')
-const ClubSquadModalLazy = lazy(() => import('./ClubSquadModal'))
+const loadClubSquadModal = () => import('./ClubSquadModal')
+
+const ClubSquadModalLazy = dynamic(loadClubSquadModal, {
+  ssr: false,
+  loading: () => null,
+})
 
 interface ClubWithSquadModalProps extends IFirebaseTeamDetail {
   offTablet: () => void
@@ -33,7 +38,7 @@ const ClubWithSquadModal = ({
     handleModalClose,
   } = useClubSquadModalTrigger({
     onClose: offTablet,
-    onHover: prefetchClubSquadModal,
+    onHover: loadClubSquadModal,
   })
 
   useEffect(() => {
@@ -51,13 +56,11 @@ const ClubWithSquadModal = ({
       onMouseLeave={handleMouseLeave}
     >
       {shouldRenderModal && isHover && (
-        <Suspense fallback={null}>
-          <ClubSquadModalLazy
-            teamId={id}
-            parentRef={parentRef}
-            offModal={handleModalClose}
-          />
-        </Suspense>
+        <ClubSquadModalLazy
+          teamId={id}
+          parentRef={parentRef}
+          offModal={handleModalClose}
+        />
       )}
     </Club>
   )
