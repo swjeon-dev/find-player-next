@@ -28,6 +28,7 @@ export default async function RootLayout({
           <Header />
           <MainContainer>{children}</MainContainer>
         </Providers>
+
         <FlashToastView />
         <NotificationView />
 
