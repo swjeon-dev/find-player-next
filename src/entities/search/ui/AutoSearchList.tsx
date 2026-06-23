@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import clsx from 'clsx'
 
 import styles from './AutoSearchList.module.css'
@@ -36,12 +37,12 @@ const AutoSearchList = ({
           type='button'
           onClick={() => handleSelect(player)}
         >
-          <img
+          <Image
             className={styles['emblem']}
             src={player.teamLogo || ''}
             alt={player.teamId.toString()}
-            width='25'
-            height='25'
+            width={25}
+            height={25}
           />
           <span className={styles['player-name']}>{player.name}</span>
         </button>

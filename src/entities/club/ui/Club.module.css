@@ -16,7 +16,7 @@
   z-index: 5;
 }
 
-img.emblem {
+.emblem {
   width: 60px;
   height: 60px;
   object-fit: contain;

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { fetchLeaguesInfoServer } from '@/entities/league/model/leagueList.server'
-import { CoverView } from '@/widget'
+import { CoverView } from '@/widget/home'
 import type { ILeagueInfo } from '@common/model'
 
 export const metadata: Metadata = {

@@ -1,1 +1,1 @@
-export { fetchLeagueListServer } from './server'
+export { default as fetchLeagueList } from './server'

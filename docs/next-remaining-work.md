@@ -1,9 +1,7 @@
 # Next.js 전환 — 남은 작업
 
 > **완료·이력·상세 가이드**는 [`next-migration.md`](./next-migration.md) 를 참고합니다.  
-> 본 문서는 **아직 하지 않은 작업**만 모아 우선순위와 함께 정리합니다. (2026-06-22 갱신)
-
----
+> 본 문서는 **아직 하지 않은 작업**만 모아 우선순위와 함께 정리합니다. (2026-06-23 갱신)
 
 ## 프로젝트 상태 요약
 
@@ -24,7 +22,8 @@
 | 홈 데이터 | RSC `fetchLeagueList` → `CoverView` |
 | 모달 | ref-only + `mounted` hydration gate (§10) |
 | 알림 | `FlashToastView` (redirect flash) · `NotificationView` (in-app, 리그 선택·목록 실패) |
-| submission 데이터 | server prefetch **제거** → modal hover prefetch + client skeleton (§9-9-5) |
+| submission 데이터 | server prefetch **제거** → modal hover prefetch + **in-component skeleton** (§10) |
+| submission 로딩·오류 | segment `loading`/`error` **없음** — RQ skeleton + `ClubViewsError`/`SubmissionLoader` + 전역 `error.tsx` (§15) |
 | P0 신뢰성·보안 | `leagueId` 검증, `leagueDto` empty/fetch 정책, proxy fetch fail-closed |
 | 전역 route boundary | `app/loading.tsx` (스피너), `app/error.tsx` — `widget/route-state/` |
 | proxy (Next 16) | 루트 `proxy.ts`, `export async function proxy` (named export) |
@@ -47,9 +46,9 @@
 | # | 작업 | 현재 | 기대 효과 |
 | - | ---- | ---- | --------- |
 | 1 | ~~**axios → fetch 전환**~~ ✅ | `rtdbRequest` + `client/`·`server/` native fetch, 앱 `axios` 제거 | 번들·일관성 |
-| 2 | ~~**서버 fetch 모듈 분리**~~ ✅ | `shared/api/server` (`fetchLeagueListServer`) / `shared/api/client` 분리 | RSC·proxy vs React Query |
-| 3 | **Route Handler BFF + `revalidate`** (§9 Phase 5) | 클라이언트 RTDB 직접 호출, `app/api/` 없음 | 서버 캐시, RTDB hit 감소, URL 비노출 |
-| 4 | **홈 리그 목록 캐시** | `fetchLeagueListServer`에 `revalidate: 1h` 적용됨 | 나머지 API·`unstable_cache` 검토 |
+| 2 | ~~**서버 fetch 모듈 분리**~~ ✅ | `shared/api/server` (`fetchLeagueList`) / `shared/api/client` 분리 | RSC·proxy vs React Query |
+| 3 | ~~**Route Handler BFF**~~ 보류 | 클라이언트 RTDB 직접 + RQ persist·prefetch (§12) | 규모·ROI상 전환 비용 대비 이점 없음 — **현상 유지** |
+| 4 | ~~**홈 리그 목록 캐시**~~ ✅ | `server/` fetch + `revalidate: 1h` + tags | proxy·홈·검증 공유 (`unstable_cache` 불필요) |
 
 **관련 파일:** `src/shared/api/`, `app/page.tsx`, `app/api/` (신규)
 
@@ -59,12 +58,12 @@
 
 | # | 작업 | 현재 | 기대 효과 |
 | - | ---- | ---- | --------- |
-| 5 | **전역 loading / error** | ✅ `app/loading.tsx`, `app/error.tsx` | — |
-| 6 | **`app/submission/loading.tsx`** | 없음 | submission 전용 스트리밍·로딩 |
-| 7 | **`app/submission/error.tsx`** | 없음 | submission 전용 복구 UI |
-| 8 | **`next/image`** | `<img>` 사용 (`LeagueSelectItem`, `Club` 등) | LCP·lazy (`remotePatterns` 필요) |
-| 9 | **Suspense 경계** | `ClubSquadModal` lazy만 | `ClubViews` / `SubmissionGameContainer` 등 구간별 스트리밍 |
-| 10 | **submission cold visit** | server prefetch 제거 상태 | 직접 URL·새로고침 시 ID 목록 지연 — 가벼운 RSC prefetch 재검토 (§9-9) |
+| 5 | ~~**전역 loading / error**~~ ✅ | `app/loading.tsx`, `app/error.tsx` | 라우트 전환·RSC throw |
+| 6 | ~~**submission loading**~~ ✅ | segment `loading.tsx` **없음** — `ClubViewsContent`·`SubmissionCard` skeleton | segment fallback(스피너)와 중복 방지 |
+| 7 | ~~**submission error**~~ ✅ | segment `error.tsx` **없음** — 전역 `error.tsx` + fetch 인라인 retry | RQ error는 boundary 밖 |
+| 8 | ~~**`next/image`**~~ ✅ | `remotePatterns` + 5개 컴포넌트 전환, submission LCP `priority` | LCP·전송량 (submission LCP **-12%**, 이미지 **-94%**) |
+| 9 | ~~**Suspense 세분화**~~ ✅ | `ClubSquadModal` **`next/dynamic`** | `useQuery`+skeleton — `useSuspenseQuery` 미사용 |
+| 10 | ~~**submission cold visit**~~ ✅ | skeleton + RQ persist — server prefetch·segment loading **미도입** | 의도된 트레이드오프 (§10) |
 
 **관련 파일:** `app/submission/`, `LeagueSelectItem.tsx`, `widget/submission/`, `widget/club/`
 
@@ -75,8 +74,8 @@
 | # | 작업 | 현재 |
 | - | ---- | ---- |
 | 11 | **Vercel(또는 호스트) 배포** | 미연동 (`deploy.yml__` 비활성) |
-| 12 | **env·도메인** | BFF 전까지 RTDB URL 클라이언트 노출 |
-| 13 | **`next-migration.md` 진행 현황 동기화** | §9 등 구식 문구 잔존 |
+| 12 | **env·도메인** | RTDB read-only 공개 카탈로그 — 클라이언트 직접 호출 수용 (BFF 보류) |
+| 13 | ~~**`next-migration.md` 진행 현황 동기화**~~ ✅ | §9 prefetch 제거·submission UX(§15) 반영 |
 
 ---
 
@@ -84,11 +83,12 @@
 
 | 작업 | 설명 |
 | ---- | ---- |
-| **동적 metadata** | submission 등 `generateMetadata` + cookie `leagueId` |
+| **동적 metadata** | ~~submission `generateMetadata`~~ ✅ — cookie `leagueId` → title.template에 리그명 |
 | **Parallel route `@modal`** | modal ↔ URL·뒤로가기 연동 |
-| **quiz store SSR 패턴 통일** | league와 동일 `skipHydration` + rehydrate (§8-6) |
-| **barrel import 정리** | `@/widget` 등 client 번들 경계 (§5-3) |
+| **quiz store SSR 패턴 통일** | `skipHydration` + `rehydrate` (§8-6) — league store 제거 후 **선택·우선순위 낮음** |
+| ~~**barrel import 정리**~~ ✅ | `app/` → `@/widget/{home,submission,route-state,not-found}` — 루트 `widget/index.ts` 제거 |
 | **리그 many 시** | modal 리스트 가상화 (§10) |
+| **Route Handler BFF** | RTDB 트래픽·비용·동시 사용자 급증 시 id 목록 등 **부분** 도입 검토 (현재 보류) |
 | **functions 리그 동기화** | `functions/src` 리그 목록 동기화 TODO |
 
 ---
@@ -105,9 +105,9 @@
 
 ```text
 1. ~~axios → fetch + server fetch 모듈 분리~~ ✅
-2. Route Handler BFF + revalidate (리그·id 목록)    ← P1
-3. submission loading/error (필요 시)              ← P2
-4. next/image, Suspense 세분화                     ← P2
+2. ~~Route Handler BFF~~ 보류 (규모·ROI — §12)
+3. ~~submission UX (skeleton·error·Suspense·cold visit)~~ ✅ (§15)
+4. ~~next/image~~ ✅
 5. Vercel 배포                                     ← P3
 ```
 
@@ -125,14 +125,22 @@
 ## 주요 파일 맵
 
 ```text
-app/loading.tsx, app/error.tsx     ← 전역 boundary
+app/page.tsx              → @/widget/home
+app/submission/page.tsx   → @/widget/submission
+app/loading|error.tsx     → @/widget/route-state
+app/not-found.tsx         → @/widget/not-found
 proxy.ts                           ← leagueId 가드 (named export, 프로젝트 루트)
 src/shared/api/rtdbRequest.ts      ← 공통 fetch 래퍼
 src/shared/api/client/             ← 클라이언트 fetch (cache: no-store)
 src/shared/api/server/             ← 서버 fetch (next.revalidate + tags)
 src/shared/config/rtdbConfig.ts    ← RTDB base URL·headers
-src/widget/route-state/            ← LoadingView, ErrorView
-docs/next-migration.md             ← 전환 이력·상세 가이드
+src/widget/club/ClubViewsContent.tsx   ← 팀 그리드 skeleton
+src/widget/club/ui/ClubViewsError.tsx  ← 팀 fetch 인라인 retry
+src/widget/submission/ui/SubmissionCard.tsx ← 선수 사진 skeleton
+src/widget/club/ui/ClubWithSquadModal.tsx   ← ClubSquadModal next/dynamic + hover prefetch
+src/widget/route-state/            ← LoadingView, ErrorView (전역 loading/error)
+next.config.ts                     ← images.remotePatterns (media.api-sports.io)
+scripts/compare-next-image-lighthouse.mjs  ← img vs next/image Lighthouse 비교 (로컬)
 ```
 
 ---
@@ -150,14 +158,17 @@ docs/next-migration.md             ← 전환 이력·상세 가이드
 [x] widget/route-state 슬라이스
 [x] axios → fetch (shared/api) — `rtdbRequest`, `client/`, 앱 `axios` 의존성 제거
 [x] server fetch 모듈 분리 — `server/` vs `client/`, `firebase*` → `rtdb*` config
-[ ] Route Handler BFF + revalidate
-[ ] 홈 fetchLeagueList 캐시 (unstable_cache 등 추가 검토)
-[ ] app/submission/loading.tsx
-[ ] app/submission/error.tsx
-[ ] next/image + remotePatterns
-[ ] submission cold visit prefetch 재검토
+[ ] Route Handler BFF + revalidate — **보류** (규모·ROI, RQ persist·prefetch로 충분)
+[x] 홈 리그 목록 캐시 — `server/` `revalidate: 1h` + tags
+[x] next/image + remotePatterns (LeagueSelectItem, Club, SubmissionCard, HintUI, AutoSearchList)
+[x] submission 로딩 — in-component skeleton (segment loading.tsx 없음)
+[x] submission 오류 — 전역 error.tsx + ClubViewsError/SubmissionLoader 인라인 retry
+[x] Suspense — ClubSquadModal next/dynamic (useQuery+skeleton 유지)
+[x] submission cold visit — skeleton + persist (server prefetch·segment loading 미도입)
+[x] submission generateMetadata — 리그명 title.template
+[x] app/ widget barrel — 슬라이스 직접 import (`@/widget/home` 등)
 [ ] Vercel 배포
-[ ] next-migration.md 진행 현황 문구 동기화
+[x] next-migration.md §9 진행 현황·아키텍처 표 동기화 (prefetch 제거·§15)
 ```
 
 ---

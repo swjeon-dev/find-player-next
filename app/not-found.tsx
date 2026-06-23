@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { NotFoundView } from '@/widget'
+import { NotFoundView } from '@/widget/not-found'
 
 export const metadata: Metadata = {
   title: '404',
