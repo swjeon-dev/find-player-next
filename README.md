@@ -1,6 +1,6 @@
 # ⚽ Find Football Player Quiz
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://swjeon-dev.github.io/find-player-game/) ![Deploy Status](https://img.shields.io/github/actions/workflow/status/swjeon-dev/find-player-game/deploy.yml?branch=master&style=flat-square&label=Deploy&logo=GitHub%20Actions&logoColor=white)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://find-player-next.vercel.app/) ![Deploy Status](https://img.shields.io/github/actions/workflow/status/swjeon-dev/find-player-game/deploy.yml?branch=master&style=flat-square&label=Deploy&logo=GitHub%20Actions&logoColor=white)
 
 블러 처리된 프리미어리그 선수 사진을 보고 이름을 맞히는 **축구 선수 퀴즈**입니다.  
 **CRA + JavaScript**로 시작한 프로젝트를 **Vite + TypeScript**로 옮기고, API·DB 제약 속에서도 **쓰기 편한 검색·퀴즈 경험**을 만드는 데 집중했습니다.
