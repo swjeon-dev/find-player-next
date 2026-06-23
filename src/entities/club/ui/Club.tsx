@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import clsx from 'clsx'
+import Image from 'next/image'
 
 import styles from './Club.module.css'
 
@@ -30,13 +31,13 @@ const Club = ({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <img
+      <Image
         className={styles['emblem']}
         src={logo}
         alt={name}
+        width={60}
+        height={60}
         ref={emblemRef}
-        width='60'
-        height='60'
       />
       {children}
     </div>

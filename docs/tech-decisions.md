@@ -211,6 +211,18 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 
 ---
 
+## 14. `next/image` — RTDB URL + `remotePatterns` ✅
+
+| | |
+| --- | --- |
+| **문제** | `<img>`로 api-sports 원본(PNG) 직접 로드 → submission LCP·전송량 큼. |
+| **선택** | `next/image` + `remotePatterns` (`media.api-sports.io`). LCP 후보(`SubmissionCard`)에 `priority`. URL은 RTDB fetch 필드 그대로 — **이미지 전용 env 없음**. |
+| **이유** | 리사이즈·WebP/AVIF, `width`/`height`로 CLS 방지. Vercel Image Optimization 기본 동작. |
+| **대안** | `<img loading="lazy">`만, BFF 경유 |
+| **트레이드오프** | 홈 LCP는 이미지 아님(모달 `mounted` gate). 로컬 1회 측정: submission LCP **-12%**, LCP 이미지 전송 **-94%** — 배포·캐시 hit 후 재측정 권장. |
+
+---
+
 ## 요약 표 (면접 스캔용)
 
 | 영역 | 선택 | 핵심 이유 |
@@ -225,6 +237,7 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 | 스타일 | CSS Modules | RSC·빌드 타임 CSS |
 | 리그 검증 | API 목록 | 상수·UI·RTDB 불일치 방지 |
 | submission prefetch | client 우선 | server·client RQ 캐시 비공유 |
+| RTDB 이미지 | `next/image` + `remotePatterns` | 리사이즈·포맷 최적화, submission LCP `priority` |
 
 ---
 

@@ -62,7 +62,7 @@
 | 5 | **전역 loading / error** | ✅ `app/loading.tsx`, `app/error.tsx` | — |
 | 6 | **`app/submission/loading.tsx`** | 없음 | submission 전용 스트리밍·로딩 |
 | 7 | **`app/submission/error.tsx`** | 없음 | submission 전용 복구 UI |
-| 8 | **`next/image`** | `<img>` 사용 (`LeagueSelectItem`, `Club` 등) | LCP·lazy (`remotePatterns` 필요) |
+| 8 | ~~**`next/image`**~~ ✅ | `remotePatterns` + 5개 컴포넌트 전환, submission LCP `priority` | LCP·전송량 (submission LCP **-12%**, 이미지 **-94%**) |
 | 9 | **Suspense 경계** | `ClubSquadModal` lazy만 | `ClubViews` / `SubmissionGameContainer` 등 구간별 스트리밍 |
 | 10 | **submission cold visit** | server prefetch 제거 상태 | 직접 URL·새로고침 시 ID 목록 지연 — 가벼운 RSC prefetch 재검토 (§9-9) |
 
@@ -107,7 +107,7 @@
 1. ~~axios → fetch + server fetch 모듈 분리~~ ✅
 2. Route Handler BFF + revalidate (리그·id 목록)    ← P1
 3. submission loading/error (필요 시)              ← P2
-4. next/image, Suspense 세분화                     ← P2
+4. ~~next/image~~ ✅, Suspense 세분화                     ← P2
 5. Vercel 배포                                     ← P3
 ```
 
@@ -132,7 +132,8 @@ src/shared/api/client/             ← 클라이언트 fetch (cache: no-store)
 src/shared/api/server/             ← 서버 fetch (next.revalidate + tags)
 src/shared/config/rtdbConfig.ts    ← RTDB base URL·headers
 src/widget/route-state/            ← LoadingView, ErrorView
-docs/next-migration.md             ← 전환 이력·상세 가이드
+next.config.ts                     ← images.remotePatterns (media.api-sports.io)
+scripts/compare-next-image-lighthouse.mjs  ← img vs next/image Lighthouse 비교 (로컬)
 ```
 
 ---
@@ -151,10 +152,10 @@ docs/next-migration.md             ← 전환 이력·상세 가이드
 [x] axios → fetch (shared/api) — `rtdbRequest`, `client/`, 앱 `axios` 의존성 제거
 [x] server fetch 모듈 분리 — `server/` vs `client/`, `firebase*` → `rtdb*` config
 [ ] Route Handler BFF + revalidate
+[x] next/image + remotePatterns (LeagueSelectItem, Club, SubmissionCard, HintUI, AutoSearchList)
 [ ] 홈 fetchLeagueList 캐시 (unstable_cache 등 추가 검토)
 [ ] app/submission/loading.tsx
 [ ] app/submission/error.tsx
-[ ] next/image + remotePatterns
 [ ] submission cold visit prefetch 재검토
 [ ] Vercel 배포
 [ ] next-migration.md 진행 현황 문구 동기화

@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import clsx from 'clsx'
 
 import { Position } from '@common/model'
@@ -13,8 +14,8 @@ interface HintRowProps {
 interface ClubEmblemProps {
   src: string
   alt: string
-  width: string
-  height: string
+  width: number
+  height: number
 }
 interface BackNumberProps {
   aNumber: number
@@ -30,7 +31,7 @@ interface PositionUIProps {
 
 function ClubEmblem({ src, alt, width, height }: ClubEmblemProps) {
   return (
-    <img
+    <Image
       className={styles['emblem']}
       src={src}
       alt={alt}
@@ -83,8 +84,8 @@ function HintCell({ kind, quiz, answer }: HintColumnDef) {
         <ClubEmblem
           src={answer.teamLogo}
           alt={answer.teamId.toString()}
-          width='45'
-          height='45'
+          width={45}
+          height={45}
         />
       )
     case 'position':

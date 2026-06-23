@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import clsx from 'clsx'
 
 import { HintList, SearchForm } from '@/entities/search'
@@ -46,7 +47,9 @@ const SubmissionCard = ({
         {showPhotoSkeleton ? (
           <SkeletonBase className={styles['photo-skeleton']} />
         ) : (
-          <img
+          <Image
+            loading='eager'
+            priority
             className={clsx(
               styles['photo'],
               !isCorrect && styles['not-correct--blur'],
@@ -56,8 +59,8 @@ const SubmissionCard = ({
             draggable={false}
             src={player?.photo}
             alt={player?.name ?? 'quiz-player'}
-            width='160'
-            height='180'
+            width={160}
+            height={180}
           />
         )}
 

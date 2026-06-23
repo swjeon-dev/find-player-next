@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 
 import styles from './LeagueSelectModal.module.css'
 import type { ILeagueInfo } from '@common/model'
@@ -22,11 +23,11 @@ export default function LeagueSelectItem({
       onMouseEnter={() => onPrefetch(league.id)}
       aria-label={`${league.name} 리그 선택`}
     >
-      <img
+      <Image
         className={styles['emblem']}
         src={league.logo}
-        width='70'
-        height='70'
+        width={70}
+        height={70}
         alt={`${league.name} emblem image`}
       />
       <span className={styles['text']}>{league.name}</span>
