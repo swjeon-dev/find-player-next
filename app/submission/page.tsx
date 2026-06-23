@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 
 import { fetchLeaguesInfoServer } from '@/entities/league/model/leagueList.server'
-import { SubmissionView } from '@/widget'
+import { SubmissionView } from '@/widget/submission'
 
 export async function generateMetadata(): Promise<Metadata> {
   const leagueId = Number((await cookies()).get('league-id')?.value)

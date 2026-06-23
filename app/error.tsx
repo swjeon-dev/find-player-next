@@ -1,6 +1,6 @@
 'use client'
 
-import { ErrorView } from '@/widget'
+import { ErrorView } from '@/widget/route-state'
 
 export default function Error({
   reset,

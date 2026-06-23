@@ -317,14 +317,16 @@ export const metadata = { title: '404' }
 FSD는 **슬라이스 public API(`index.ts`)를 통한 import**를 권장하고, `@/widget/home/ui/CoverView` 같은 **deep import는 캡슐화를 깨므로 비권장**합니다.
 
 ```typescript
-// 권장 — 슬라이스 public API
+// app/ — 슬라이스 public API (권장, 적용됨)
 import { CoverView } from '@/widget/home'
+import { SubmissionView } from '@/widget/submission'
+import { LoadingView, ErrorView } from '@/widget/route-state'
 
-// 가능하지만 FSD 비권장 — 내부 경로 직접 접근
-import CoverView from '@/widget/home/ui/CoverView'
+// widget 내부 — 동일 슬라이스 또는 타 슬라이스 public API
+import { ClubViews } from '@/widget/club'
 
-// 주의 — 최상위 barrel은 슬라이스 간 순환 참조에 취약
-import { ClubViews } from '@/widget' // widget 내부에서는 @/widget/club 권장
+// 비권장 — 루트 barrel (`src/widget/index.ts` 제거됨)
+// import { CoverView } from '@/widget'
 ```
 
 실무적으로는 **page(`app/`)에서는 `@/widget/home`처럼 슬라이스 단위 import**, **widget 내부에서는 형제 슬라이스를 `@/widget/club`처럼 직접 import**하는 절충이 무난합니다. layout에서 `@/shared/ui/layout`처럼 세그먼트 직접 import가 필요한 경우는 §6-7 참고.
