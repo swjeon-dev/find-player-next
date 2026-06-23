@@ -46,8 +46,8 @@
 
 | # | 작업 | 현재 | 기대 효과 |
 | - | ---- | ---- | --------- |
-| 1 | **axios → fetch 전환** | `shared/api/client.ts` — `firebaseApiInstance` (axios) | 서버/클라이언트 공용 fetch, 번들·일관성 |
-| 2 | **서버 fetch 모듈 분리** | `fetchLeagueListServer`만 fetch, `clientService.ts`는 axios 의존 | `shared/api/server` / client 분리 |
+| 1 | ~~**axios → fetch 전환**~~ ✅ | `rtdbRequest` + `client/`·`server/` native fetch, 앱 `axios` 제거 | 번들·일관성 |
+| 2 | ~~**서버 fetch 모듈 분리**~~ ✅ | `shared/api/server` (`fetchLeagueListServer`) / `shared/api/client` 분리 | RSC·proxy vs React Query |
 | 3 | **Route Handler BFF + `revalidate`** (§9 Phase 5) | 클라이언트 RTDB 직접 호출, `app/api/` 없음 | 서버 캐시, RTDB hit 감소, URL 비노출 |
 | 4 | **홈 리그 목록 캐시** | `fetchLeagueListServer`에 `revalidate: 1h` 적용됨 | 나머지 API·`unstable_cache` 검토 |
 
@@ -104,7 +104,7 @@
 ## 추천 적용 순서
 
 ```text
-1. axios → fetch + server fetch 모듈 분리          ← P1
+1. ~~axios → fetch + server fetch 모듈 분리~~ ✅
 2. Route Handler BFF + revalidate (리그·id 목록)    ← P1
 3. submission loading/error (필요 시)              ← P2
 4. next/image, Suspense 세분화                     ← P2
@@ -127,8 +127,10 @@
 ```text
 app/loading.tsx, app/error.tsx     ← 전역 boundary
 proxy.ts                           ← leagueId 가드 (named export, 프로젝트 루트)
-src/shared/api/client.ts           ← axios (미전환)
-src/shared/api/server/             ← fetch (리그 목록)
+src/shared/api/rtdbRequest.ts      ← 공통 fetch 래퍼
+src/shared/api/client/             ← 클라이언트 fetch (cache: no-store)
+src/shared/api/server/             ← 서버 fetch (next.revalidate + tags)
+src/shared/config/rtdbConfig.ts    ← RTDB base URL·headers
 src/widget/route-state/            ← LoadingView, ErrorView
 docs/next-migration.md             ← 전환 이력·상세 가이드
 ```
@@ -146,8 +148,8 @@ docs/next-migration.md             ← 전환 이력·상세 가이드
 [x] app/loading.tsx — 전역 LoadingView (스피너)
 [x] app/error.tsx — 전역 ErrorView
 [x] widget/route-state 슬라이스
-[ ] axios → fetch (shared/api)
-[ ] server fetch 모듈 분리 (clientService axios 제거)
+[x] axios → fetch (shared/api) — `rtdbRequest`, `client/`, 앱 `axios` 의존성 제거
+[x] server fetch 모듈 분리 — `server/` vs `client/`, `firebase*` → `rtdb*` config
 [ ] Route Handler BFF + revalidate
 [ ] 홈 fetchLeagueList 캐시 (unstable_cache 등 추가 검토)
 [ ] app/submission/loading.tsx
