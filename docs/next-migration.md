@@ -66,7 +66,7 @@
 #### 완료
 
 - [x] **Server / Client UI 분리** — `CoverView` RSC, `LeagueSelectModal` client island (`widget/home`, `entities/league`)
-- [x] **submission Server prefetch + dehydrate** — `app/submission/page.tsx` (`cookies` → `fetchTeamIdsInLeague` · `fetchPlayerIdsInLeague` → `HydrationBoundary` → `SubmissionView leagueId`)
+- [x] **submission Server prefetch + dehydrate** — ~~도입~~ **제거** (§9-9-5). 현재: modal hover prefetch + in-component skeleton
 - [x] **`LEAGUE_LIST` allowlist 상수** — ~~`league.constants.ts`~~ 제거. API `fetchLeagueList` 목록이 UI·Action 검증 단일 소스
 - [x] **`selectLeagueAction`** — cookie set + redirect. **API 목록 검증** → 실패 시 `{ ok: false, reason }` (`LEAGUE_SELECT_UNAVAILABLE`)
 - [x] **리그 선택 → Server Action 연동** — `useLeagueSelectModal` → `selectLeagueAction` + `NotificationView` (실패) / `unstable_rethrow` (redirect)
@@ -74,13 +74,13 @@
 - [x] **`proxy` leagueId 검증** — `getValidLeagueIds` + `isValidLeagueId`. invalid cookie 삭제 + `INVALID_LEAGUE` flash toast
 - [x] **redirect flash toast** — proxy가 `toast-message` cookie set → `FlashToastView` (layout) read·표시·delete (`shared/config/flashToast.ts`)
 - [x] **in-app notification** — `NotificationView` + `showNotificationReason` (`shared/config/notification.ts`). 리그 목록·선택 실패 등 same-page 알림
-- [x] **`ProtectedRoute` 제거** — proxy + RSC prefetch로 대체 (`app/submission/layout.tsx` pass-through)
+- [x] **`ProtectedRoute` 제거** — `proxy.ts` 가드로 대체 (`app/submission/layout.tsx` pass-through)
 
 #### 미완료
 
-- [x] **`leagueDto` empty / fetch 정책** — `fetchLeaguesInfoServer` (retry 1회, `LeagueListError`)
+- [x] **`leagueDto` empty / fetch 정책** — `fetchLeaguesInfoServer` (`LeagueListError`)
 - [x] **proxy fetch 실패** — fail-closed + `LEAGUE_LIST_UNAVAILABLE` flash
-- [x] **submission server prefetch 제거** — modal client prefetch + skeleton (§9-9-5)
+- [x] **submission UX (로딩·오류·Suspense)** — segment `loading`/`error` 없음, RQ skeleton + 전역 `error.tsx` + `ClubSquadModal` `next/dynamic` (`tech-decisions.md` §15)
 - [ ] **Route Handler + `revalidate`** (선택) — RTDB BFF·서버 캐시
 
 #### 추천 적용 순서
@@ -89,7 +89,7 @@
 1. Server UI 분리              ✅
 2. selectLeagueAction 연동       ✅
 3. proxy 가드 + flash toast      ✅
-4. submission prefetch + prop  ✅
+4. submission client prefetch + skeleton  ✅ (server prefetch 제거 — §9-9-5)
 5. selectLeagueAction API 검증 + Notification  ✅
 6. proxy allowlist 검증        ✅
 7. Route Handler + revalidate (트래픽 증가 시)
@@ -804,7 +804,7 @@ app/layout.tsx
 
 /submission
   └─ proxy.ts — league-id 없으면 / redirect + toast-message flash
-  └─ page.tsx (RSC) — cookie leagueId prefetch → HydrationBoundary
+  └─ page.tsx (RSC) — `cookies()` → `leagueId` prop (prefetch 없음)
        └─ SubmissionView leagueId (client) — ClubViews · SubmissionGameContainer
 
 app/layout.tsx
@@ -817,11 +817,11 @@ app/layout.tsx
 | `app/page.tsx`            | metadata + CoverView                      | ✅ metadata·정적 HTML                       |
 | `league-id` cookie        | Server Action · proxy · RSC               | ✅ 서버가 leagueId 읽기 가능                |
 | `proxy.ts`                | cookie 파싱 + API 목록 검증 + flash toast | ✅ invalid id 차단·cookie 삭제              |
-| `app/submission/page.tsx` | RSC prefetch + `leagueId` prop            | ✅ cookie 유효 시 첫 paint 단축             |
+| `app/submission/page.tsx` | RSC `leagueId` prop only (prefetch 없음)    | ✅ cookie 읽기·가드와 분리, client fetch + skeleton |
 | `FlashToastView`          | redirect flash cookie 1회 표시            | ✅ proxy redirect 안내                      |
 | `NotificationView`        | in-app 알림 (`showNotificationReason`)    | ✅ 리그 목록·선택 실패                      |
-| React Query               | `fetch` → RTDB (`shared/api/client`)      | △ ID 목록 server(RSC/proxy), 상세·검색 client |
-| `usePrefetchLeagueData`   | hover client prefetch                     | △ server prefetch와 역할·중복 재검토 (§9-9) |
+| React Query               | `fetch` → RTDB (`shared/api/client`)      | ID 목록·상세·검색 client, persist 24h       |
+| `usePrefetchLeagueData`   | hover client prefetch                     | ✅ happy path 캐시 warming (§9-9-5)           |
 
 **관문 통과:** 서버·Edge가 `leagueId` cookie를 읽고 검증합니다. 남은 과제는 **empty/fetch 실패 정책**·선택적 BFF입니다.
 
@@ -1311,6 +1311,7 @@ return NextResponse.next() // 가로채지 않음 — hard nav 아님
 
 ```text
 [x] submission server prefetch 제거 (§9-9-5)
+[x] submission 로딩·오류·Suspense — segment boundary 없음, in-component skeleton + 전역 error (tech-decisions §15)
 ```
 
 ## 10. React → Next 전환 시 환경 차이 이슈

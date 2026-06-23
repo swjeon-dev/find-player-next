@@ -48,7 +48,7 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 | **선택** | 루트 `proxy.ts`, matcher `/submission` — cookie 없음·invalid 시 **HTML 내려주기 전** `/` redirect |
 | **이유** | Edge에서 요청을 가로채 **렌더링 전** 차단. GitHub Pages CSR 시절 “새로고침하면 404/가드 실패”와 달리, **서버(Edge)가 먼저 판단**. |
 | **대안** | Client `useRouter.replace` + layout 가드 |
-| **트레이드오프** | invalid id 검증 시 RTDB fetch 필요 → `fetchLeagueListServer` + `revalidate: 1h`. fetch 실패 시 **fail-closed**(홈 redirect + flash). |
+| **트레이드오프** | invalid id 검증 시 RTDB fetch 필요 → `fetchLeagueList` + `revalidate: 1h`. fetch 실패 시 **fail-closed**(홈 redirect + flash). |
 
 **한 줄:**  
 가드는 **UX(깜빡임 제거)** 와 **보안(직링크 차단)** 모두를 위해 **렌더 전 계층(proxy)** 에 둡니다.
@@ -105,7 +105,7 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 | 퀴즈 중인 선수 id | Zustand persist | UI 상호작용·가벼운 세션 |
 | 검색어 | Zustand (input store) | 입력 상태 |
 
-**카탈로그 데이터(팀/선수 id·상세)** 는 RQ. 향후 BFF 도입 시 **서버 캐시(1차) + RQ(2차)** 겹쳐 쓸 예정 (§9 Phase 5).
+**카탈로그 데이터(팀/선수 id·상세)** 는 RQ. BFF(§12)는 **보류** — 트래픽·비용 이슈 전 현상 유지.
 
 ---
 
@@ -165,7 +165,18 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 | **선택** | server prefetch 제거 → modal hover prefetch + skeleton. `leagueId`는 RSC prop(`cookies()`). |
 | **이유** | hover 후 선택이 주 경로일 때 **modal 캐시 hit이 더 빠름**. cold visit(직링크)만 skeleton 감수. |
 | **대안** | server prefetch 유지, BFF+공유 캐시 |
-| **트레이드오프** | URL 직접 입력·새로고침 시 id 목록 로딩 지연 — `loading.tsx`·가벼운 prefetch 재검토 여지(§9-9-5). |
+| **트레이드오프** | cold visit(직링크·새로고침)은 client fetch + skeleton — **수용** (§15). segment `loading`/`error`·추가 Suspense **미도입**. |
+
+---
+
+## 15. submission 로딩·오류·Suspense — in-component + 전역 boundary ✅
+
+| | |
+| --- | --- |
+| **로딩** | `app/submission/loading.tsx` **없음**. RQ `isPending` → `ClubViewsContent`·`SubmissionCard` **skeleton**. segment fallback(스피너)와 역할 중복. |
+| **오류** | `app/submission/error.tsx` **없음**. RSC throw → **`app/error.tsx`**. RQ fetch 실패 → `ClubViewsError`·`SubmissionLoader` **인라인 retry** (boundary 밖). |
+| **Suspense** | **`ClubSquadModal` `next/dynamic`** (`ssr: false`, hover loader prefetch). `useQuery`+skeleton 유지 — `ClubViews`/`SubmissionGameContainer`에 Suspense **추가 안 함**. |
+| **cold visit** | §10과 동일 — skeleton + RQ persist. server prefetch·segment loading **재검토 안 함**. |
 
 ---
 
@@ -181,20 +192,20 @@ team/player  → React Query (누가 읽나: client, persist 24h)
 
 ---
 
-## 12. (선택) RTDB BFF + 서버 캐시 — 아직 미적용
+## 12. RTDB BFF — 보류 (현상 유지)
 
 | | |
 | --- | --- |
-| **문제** | 브라우저가 RTDB URL 직접 호출 → 사용자마다 RTDB hit, URL 노출. |
-| **선택 (예정)** | `app/api/...` Route Handler → RTDB → `revalidate`. 클라이언트 RQ는 `/api` 호출. |
-| **이유** | **서버 캐시는 사용자 간 공유** (리그·팀 id 목록). 클라이언트 RQ는 **개인 재방문** 담당. |
-| **대안** | 현状 client 직결 + RQ persist만 |
-| **트레이드오프** | Next 서버 홉·구현 비용. 트래픽·비용 이슈 전에는 Phase 4 수준으로 충분(§9 Phase 5). |
+| **문제 (잠재)** | 브라우저 RTDB 직접 호출 → 사용자별 hit, URL 노출. |
+| **결정** | **BFF 미도입.** 클라이언트 `shared/api/client` + RQ persist·prefetch, 서버는 리그 목록만 `revalidate` (§11). |
+| **보류 이유** | ① RTDB **read-only** — URL 숨김만으로는 ROI 낮음. ② 규모 작음 — id 목록 **교차 사용자 캐시** 이득 제한적. ③ RQ persist·hover prefetch로 **개인·happy path** 이미 커버. ④ BFF는 miss·집계 시 **TTFB 악화** 가능. ⑤ Route Handler·이중 캐시 **전환 비용** > 현재 서비스 이점. |
+| **재검토 조건** | RTDB 과금·동시 접속 급증, cold visit 비율 증가, 백엔드 교체·rate limit 필요 시 **id 목록 등 부분 BFF**만. |
+| **대안 (현재)** | client 직결 + RQ / server 리그 목록 fetch cache |
 
 ```text
-[지금]  브라우저 ──fetch(no-store)──► RTDB   (React Query 캐시)
-        RSC/proxy ──fetch(revalidate)──► RTDB (Next Data Cache)
-[BFF]   브라우저 ──RQ──► /api ──캐시──► RTDB  (서버+클라이언트 캐시)
+[유지]  브라우저 ──fetch(no-store)──► RTDB   (React Query persist·prefetch)
+        RSC/proxy ──fetch(revalidate)──► RTDB (리그 목록만 Next Data Cache)
+[BFF]   (보류) 브라우저 ──RQ──► /api ──캐시──► RTDB
 ```
 
 ---
