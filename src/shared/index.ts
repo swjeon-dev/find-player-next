@@ -1,4 +1,3 @@
-export * from './api/server'
 export * from './api/client'
 export * from './lib'
 export * from './ui'
