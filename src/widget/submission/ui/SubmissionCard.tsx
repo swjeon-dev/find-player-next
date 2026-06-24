@@ -3,13 +3,19 @@
 import Image from 'next/image'
 import clsx from 'clsx'
 
-import { HintList, SearchForm } from '@/entities/search'
+import { HintList } from '@/entities/search'
 import { SkeletonBase } from '@/shared'
 import type { IFirebasePlayer } from '@common/model'
 
 import ChangeButton from './ChangeButton'
 import { useSubmissionGame } from '../model'
 import styles from './SubmissionCard.module.css'
+import dynamic from 'next/dynamic'
+
+const SearchFormLazy = dynamic(
+  () => import('@/entities/search/ui/SearchForm'),
+  { ssr: false, loading: () => null },
+)
 
 interface SubmissionCardProps {
   player: IFirebasePlayer | undefined
@@ -65,7 +71,7 @@ const SubmissionCard = ({
         )}
 
         {player && (
-          <SearchForm
+          <SearchFormLazy
             quiz={player}
             disabled={isDisabled}
             setIsCorrect={setIsCorrect}
