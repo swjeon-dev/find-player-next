@@ -29,7 +29,7 @@ CRA + JavaScript로 만들어 두었던 퀴즈를 **Vite + TypeScript**로 옮�
 | **검색·입력** | 적재 데이터·Functions 수정 대신(서버 제어 한계 가정), **prefix 검색 + hover 보조 + React Query prefetch** 로 체감 대기 완화                                             |
 | **화면·흐름** | **커버 → 리그 선택 모달 → 팀 hover** 로 중간 단계를 두고, 퀴즈 전에 필요한 id·상세를 prefetch ([선수 검색 데이터 구조 제약](#issue-search) 참고)                        |
 | **체감 성능** | 조회·페이지 구조 변경 후 Lighthouse 기준(리팩터링 전 빌드 vs 현재, 홈): **LCP 24.5s → 3.2s**, **TBT 690ms → 0ms**, Performance **53 → 87** ([상세 비교](#perf-compare)) |
-| **코드 구조** | 역할별 폴더(`components/`, `hooks/`) 한계를 느끼고 **FSD 기준 리팩터링** (`pages` → `widget` → `entities`, `features`는 규모상 미도입)                                  |
+| **코드 구조** | 역할별 폴더(`components/`, `hooks/`) 한계를 느끼고 **FSD 기준 리팩터링** (`app/` → `widget` → `entities`, `features`는 규모상 미도입)                                  |
 | **Next 전환** | App Router — **검색·선택·퀴즈는 client(RQ·Zustand)**, RSC·Edge는 **proxy·Action·홈 fetch·generateMetadata** 등 요청 경계만 ([아키텍처](#next-architecture) 참고) |
 
 전체 선수 일괄 조회 시 첫 이용이 **10초 이상** 걸리던 시기를 거친 뒤, 위 조회·화면 흐름으로 바꾸면서 **화면이 채워지는 시점(LCP)** 과 **메인 스레드 블로킹(TBT)** 이 가장 크게 줄었습니다. 번들 gzip은 메인 엔트리만 보면 소폭 감소했지만, 홈 첫 JS 합은 청크 분리로 비슷한 수준입니다.
@@ -51,9 +51,10 @@ CRA + JavaScript로 만들어 두었던 퀴즈를 **Vite + TypeScript**로 옮�
 RTDB가 id 단위로 쪼개져 있고 hover prefetch로 happy path를 이미 커버하고 있어, submission까지 RSC prefetch를 넓히면 **서버·클라이언트 RQ 캐시가 겹치고 전환만 느려질** 수 있다고 보고 server prefetch는 제거했습니다. BFF·segment Suspense 확대도 규모·ROI상 **보류** ([`tech-decisions.md` §12·§15](./tech-decisions.md)).
 
 ```text
-[client]  검색·퀴즈·팀 hover·RQ persist/prefetch
+[client]  검색·퀴즈·팀 hover·RQ persist/prefetch · next/dynamic(ClubSquadModal, SearchForm)
 [server]  proxy 가드 · selectLeagueAction · 홈 fetchLeagueList(revalidate 1h)
 [RSC]     CoverView 셸 · submission leagueId prop · generateMetadata(리그명 title)
+[shared]  client barrel(@/shared) · server fetch는 @/shared/api/server direct + server-only
 ```
 
 **면접 한 줄:** App Router를 쓰긴 했지만 **전면 RSC 앱**으로 만들지는 않았고, Next는 **가드·검증이 필요한 얇은 서버 셸**로 썼다.
@@ -174,28 +175,31 @@ External API
 
 <a id="lazy-chunk"></a>
 
-### 5. lazy·chunk 분리 (메인 엔트리 JS 경량화)
+### 5. lazy·chunk 분리 (메인 JS 경량화)
 
-`lazy loading`과 `manualChunks`로 **첫 접속 시 받는 메인 엔트리 JS**(`index-*.js`)에서 화면·라이브러리 일부를 빼 냈습니다. 퀴즈(`Submission`)·모달 등은 필요할 때 따로 받도록 나눴습니다.
+#### Vite SPA 시절 — `React.lazy` + `manualChunks`
 
-**분리 전·후 (번들 분석 기준, gzip)**  
-분리 전 수치는 lazy·`manualChunks` 미적용 때와 비교해 환산한 값입니다.
+`React.lazy`와 Vite `manualChunks`로 **첫 접속 메인 엔트리 JS**(`index-*.js`)에서 퀴즈 라우트·React Query 등을 분리했습니다. ([Lighthouse 비교](#perf-compare)의 **24s→3s** 개선은 주로 **조회·prefetch 구조** 효과이며, 번들 분리 체감은 작았습니다.)
 
-| 구분                      | 분리 전                                                                               | 분리 후 (현재 빌드)                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| 메인 엔트리 JS            | Submission·React Query 등이 한 덩어리에 가깝게 실림 (엔트리 **약 141 KiB** 수준 추정) | **약 136.5 KiB** (`index-*.js`)                                                            |
-| `Submission`              | 홈 첫 진입 시 메인에 포함                                                             | 메인에서 분리 → 엔트리 **약 4.59 KiB↓**, 이동 시 별도 청크 **약 4.7 KiB** 추가 로드        |
-| React Query (`@tanstack`) | 메인에 포함                                                                           | `vendor-query` 청크 **약 15.3 KiB** (루트에서 로드, **첫 방문 총 다운로드량은 거의 동일**) |
-| `ClubSquadModal`          | `Submission` 쪽 번들에 포함                                                           | hover 시 **약 1.3 KiB** 별도 로드, `Submission` 청크 **약 0.52 KiB↓**                      |
+**분리 전·후 (Vite 빌드, gzip)**
 
-| 적용                            | 사용 위치                       |
-| ------------------------------- | ------------------------------- |
-| `Submission` lazy               | `src/app/routes/AppRouter.tsx`  |
-| `ClubSquadModal` lazy           | `src/entities/club/ui/Club.tsx` |
-| `vendor-query` (`manualChunks`) | `vite.config.js`                |
+| 구분                      | 분리 전                          | 분리 후 (Vite)                                      |
+| ------------------------- | -------------------------------- | --------------------------------------------------- |
+| 메인 엔트리 JS            | **약 141 KiB** (Submission 포함) | **약 136.5 KiB**                                    |
+| `Submission`              | 메인에 포함                      | 라우트 이동 시 **약 4.7 KiB** 별도                  |
+| React Query (`@tanstack`) | 메인에 포함                      | `vendor-query` **약 15.3 KiB** (홈 첫 로드 합은 유사) |
+| `ClubSquadModal`          | Submission 번들에 포함           | hover 시 **약 1.3 KiB** 별도                        |
 
-**이 서비스 규모에서는 체감상 큰 차이는 거의 없었습니다.** 메인 JS는 줄었지만, React Query는 여전히 첫 로드에 필요하고 화면도 많지 않아서입니다.  
-다만 **라우트·기능·의존성이 많아지는 React 앱**에서는 같은 방식으로 메인 엔트리를 가볍게 두고 청크를 나누는 편이 **초기 접속·재배포 후 캐시**에 도움이 될 수 있다고 봅니다.
+#### Next.js — `next/dynamic`
+
+App Router 전환 후 라우트는 `app/`가 담당하고, **화면 단위 lazy**는 `next/dynamic`으로 이어갑니다.
+
+| 적용 | 파일 | 패턴 |
+| ---- | ---- | ---- |
+| `ClubSquadModal` | `widget/club/ui/ClubWithSquadModal.tsx` | `ssr: false`, hover 시 `import()` prefetch |
+| `SearchForm` | `widget/submission/ui/SubmissionCard.tsx` | `ssr: false`, `player` 확정 후 mount |
+
+**이 서비스 규모에서는 체감 차이는 작습니다.** 다만 조건부 mount UI를 메인 submission 번들에서 빼 두는 패턴은 유지했습니다.
 
 <a id="debounce"></a>
 
@@ -240,11 +244,11 @@ Vite·TypeScript 마이그레이션과 기능 추가가 진행된 뒤, **`compon
 
 **Feature-Sliced Design**을 처음부터 전부 따르기보다, 위 불편을 줄이는 데 도움이 되는 부분을 기준으로 `src/`를 **도메인·레이어 단위로 다시 나눴습니다.**
 
-리팩터링 과정에서는 우선 **`pages` → `widget` → `entities`(UI·model)** 순으로 화면 흐름에 맞게 정리했습니다.  
-라우트 진입은 `pages`, 화면 블록 조합은 `widget`, 도메인별 UI·상태·데이터 접근은 `entities` 슬라이스에 두었습니다.
+리팩터링 과정에서는 **`app/`(라우트) → `widget` → `entities`(UI·model)** 순으로 화면 흐름에 맞게 정리했습니다.  
+라우트 진입은 루트 `app/`, 화면 블록 조합은 `widget/`, 도메인별 UI·상태·데이터 접근은 `entities` 슬라이스에 두었습니다.
 
 - **도메인별 슬라이스** (`entities/club`, `entities/league`, `entities/search` 등)로 묶어, 컴포넌트·훅·상태가 **무슨 목적의 코드인지** 폴더만 봐도 드러나게 함
-- 화면 조합은 `widget/`, 라우트 진입은 `pages/`, 공용은 `shared/`로 분리해 **기능 단위로 읽기** 쉽게 함
+- 화면 조합은 `widget/`, 라우트 진입은 루트 `app/`, 공용은 `shared/`로 분리해 **기능 단위로 읽기** 쉽게 함
 - 슬라이스마다 `index.ts` public API를 두고, FSD **레이어·슬라이스 의존 방향**에 맞춰 import를 정리함
 
 #### `features` 레이어를 두지 않은 이유
@@ -261,35 +265,38 @@ FSD에는 `features` 레이어도 있지만, **이번에는 넣지 않았습니�
 - **도메인별로 나누기 쉬움** — 리그·팀·검색·퀴즈처럼 경계를 정할 때, 해당 슬라이스 안의 `ui` / `model`만 보면 됨
 - **컴포넌트·함수의 목적이 분명해짐** — 예: 선수명 필터는 `entities/search`, 퀴즈 상태는 `widget/submission/model`
 - **가독성** — “이 화면 블록은 widget, 이 도메인 데이터는 entities”처럼 **읽는 순서가 정해짐**
-- **기능 파악이 빨라짐** — submission 화면은 `pages` → `widget` → `entities` 순으로만 따라가면 됨
+- **기능 파악이 빨라짐** — submission 화면은 `app/submission` → `widget` → `entities` 순으로만 따라가면 됨
 - **사용처 추적 부담 감소** — 슬라이스 public API(`@/entities/search` 등) 기준으로 import가 모임
 
 #### 리팩터링 전·후
 
 | 구분                 | 이전                                     | 이후                                 |
 | -------------------- | ---------------------------------------- | ------------------------------------ |
-| 공통 설정·API        | `constant/`, `lib/`, `services/` 등 분산 | `shared/config`, `shared/api`        |
-| 전역 스타일·Provider | 루트·`styles/` 혼재                      | `app/styles`, `app/providers`        |
-| 도메인 UI·상태       | `components/club` 등 기능별 혼합         | `entities/{club,league,search}`      |
-| 화면 단위 조합       | 페이지에 로직·UI 혼재                    | `widget/{club,submission}` + `pages` |
-| 유틸                 | `src/utils/`                             | `shared/lib`, `shared/ui`            |
+| 공통 설정·API        | `constant/`, `lib/`, `services/` 등 분산 | `shared/config`, `shared/api` (client barrel / server direct) |
+| 전역 스타일·Provider | 루트·`styles/` 혼재                      | `src/app/styles`, `src/app/providers`                         |
+| 도메인 UI·상태       | `components/club` 등 기능별 혼합         | `entities/{club,league,search}`                              |
+| 화면 단위 조합       | 페이지에 로직·UI 혼재                    | `widget/{home,club,submission}` + `app/`                     |
+| 라우트               | Vite `pages/` + React Router             | Next `app/page`, `app/submission`, …                         |
+| 유틸                 | `src/utils/`                             | `shared/lib`, `shared/ui`                                    |
 
-#### 현재 `src/` 레이어 구조
+#### 현재 프로젝트 구조 (Next App Router)
 
 ```text
+app/                 # Next 라우트 (page, layout, loading, error, not-found)
 src/
-├── app/           # 앱 조립: 라우터, Provider, persist, GlobalStyle
-├── pages/         # 라우트 단위 페이지 (cover, submission, not-found)
-├── widget/        # 화면 블록: club(팀 목록), submission(퀴즈)
-├── entities/      # 도메인 슬라이스: club, league, search
-├── shared/        # 공용: api, config, lib, ui, types
-└── index.tsx      # 엔트리: Provider·테마·라우터만 연결
+├── app/             # 앱 조립: Providers, global CSS (라우트 아님)
+├── widget/          # 화면 블록: home, club, submission, route-state, not-found
+├── entities/        # 도메인 슬라이스: club, league, search
+├── shared/          # 공용: api/client, lib, ui, config, types
+│   └── api/server/  # 서버 fetch — @/shared barrel 제외, direct import + server-only
+└── (pages/, index.tsx — Vite 시절, 제거됨)
+proxy.ts             # submission leagueId 가드 (Next 16)
 ```
 
 의존은 위에서 아래로만 흐르게 맞췄습니다.
 
 ```text
-app → pages → widget → entities → shared
+app/ (routes) → widget/ → entities/ → shared/
          └─ (features 없음 — entities + widget에서 함께 관리)
 ```
 
@@ -301,7 +308,7 @@ app → pages → widget → entities → shared
 - **Firebase 서버리스 조회**로 클라이언트가 외부 API Rate Limit에 덜 묶이게 했습니다.
 - **prefetch + UX**로 id 여러 번 타는 DB에서도, 사용자가 “기다린다”는 느낌을 줄였습니다 ([리팩터링 전·후 빌드 비교](#perf-compare) — LCP **약 24s → 3s**대).
 - **상태별 UI**로 오답·정답 흐름을 분명하게 맞췄습니다.
-- **lazy·chunk 분리**로 메인 엔트리 JS를 줄였습니다 ([lazy·chunk 분리](#lazy-chunk) 참고, 이 서비스에서는 체감 차이는 작음).
+- **lazy·chunk / next/dynamic** — Vite 메인 JS 분리, Next에서 `ClubSquadModal`·`SearchForm` 지연 로드 ([lazy·chunk 분리](#lazy-chunk), 체감 차이는 작음).
 - **`components/`·`hooks/` → FSD 리팩터링**으로 코드 위치·사용처를 찾기 쉬워졌습니다 ([FSD 리팩터링](#fsd-refactor)).
 
 ## 회고
@@ -315,7 +322,7 @@ app → pages → widget → entities → shared
 - `components/`, `hooks/`처럼 역할만 나눈 구조에서 **사용처 추적이 어려울 때**, 도메인 기준으로 어떻게 다시 나눠야 하는가
 
 검색, 다단계 데이터 조회, 번들 모두에서 비슷한 결론에 도달했습니다.  
-기술을 화려하게 쓰는 것보다, **제약이 있어도 쓰기 덜 답답한 화면**이 우선이었습니다. 검색·조회는 prefix·hover·prefetch, 번들은 메인 엔트리 경량화(lazy·chunk)로 그 방향에 맞췄습니다.
+기술을 화려하게 쓰는 것보다, **제약이 있어도 쓰기 덜 답답한 화면**이 우선이었습니다. 검색·조회는 prefix·hover·prefetch, 번들은 Vite lazy·chunk → Next `next/dynamic`으로 그 방향에 맞췄습니다.
 
 ### 성능 최적화
 
@@ -325,13 +332,13 @@ app → pages → widget → entities → shared
 
 - prefetch로 다단계 조회(`id → 상세`)의 체감 대기 시간 완화
 - Debounce 훅으로 자동완성 입력·요청 빈도 정리 ([Debounce](#debounce))
-- `lazy` + `manualChunks`로 메인 엔트리 JS 경량화 ([lazy·chunk 분리](#lazy-chunk)) — 이 서비스에서는 체감 차이는 작았음
+- Vite `lazy` + `manualChunks`, Next `next/dynamic`으로 조건부 UI JS 경량화 ([lazy·chunk 분리](#lazy-chunk)) — 이 서비스에서는 체감 차이는 작았음
 
 <a id="perf-compare"></a>
 
-#### 리팩터링 전·후 빌드 비교 (`dist_old` vs 현재)
+#### 리팩터링 전·후 빌드 비교 (`dist_old` vs Vite `dist`) — **Next 이전**
 
-조회·prefetch·커버·리그 모달 등을 넣기 **전**에 보관해 둔 production 빌드(`dist_old`, JS 단일 청크)와, **현재** `master` 빌드를 같은 조건으로 맞춰 비교했습니다.
+조회·prefetch·커버·리그 모달 등을 넣기 **전**에 보관해 둔 production 빌드(`dist_old`, JS 단일 청크)와, **Vite 시절** `master` 빌드를 같은 조건으로 맞춰 비교했습니다. **현재 배포는 Next(Vercel)** — [GH Pages vs Vercel](#perf-vercel) 참고.
 
 - **번들**: Vite 빌드 산출물 기준 (gzip)
 - **Lighthouse**: Lighthouse 12.x, 로컬 headless, URL `/find-player-game/`·`/submission` (LHCI와 동일 카테고리·엔진, 1회 측정)
@@ -502,4 +509,4 @@ URL에서 서버가 해석하는 부분과 클라이언트가 해석하는 부�
 - 테스트 코드 추가 (슬라이스·public API 기준으로 어디까지 쓸지 정하기)
 - 문제·리그 다양성 확장
 - 점수·랭킹 시스템
-- `features` 분리 (로직·재사용이 커질 때 — 지금은 `pages` → `widget` → `entities`)
+- `features` 분리 (로직·재사용이 커질 때 — 지금은 `app/` → `widget` → `entities`)

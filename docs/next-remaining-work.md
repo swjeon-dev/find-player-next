@@ -63,7 +63,7 @@
 | 6 | ~~**submission loading**~~ ✅ | segment `loading.tsx` **없음** — `ClubViewsContent`·`SubmissionCard` skeleton | segment fallback(스피너)와 중복 방지 |
 | 7 | ~~**submission error**~~ ✅ | segment `error.tsx` **없음** — 전역 `error.tsx` + fetch 인라인 retry | RQ error는 boundary 밖 |
 | 8 | ~~**`next/image`**~~ ✅ | `remotePatterns` + 5개 컴포넌트 전환, submission LCP `priority` | LCP·전송량 (submission LCP **-12%**, 이미지 **-94%**) |
-| 9 | ~~**Suspense 세분화**~~ ✅ | `ClubSquadModal` **`next/dynamic`** | `useQuery`+skeleton — `useSuspenseQuery` 미사용 |
+| 9 | ~~**Suspense 세분화**~~ ✅ | `ClubSquadModal`·`SearchForm` **`next/dynamic`** | `useQuery`+skeleton — `useSuspenseQuery` 미사용 |
 | 10 | ~~**submission cold visit**~~ ✅ | skeleton + RQ persist — server prefetch·segment loading **미도입** | 의도된 트레이드오프 (§10) |
 
 **관련 파일:** `app/submission/`, `LeagueSelectItem.tsx`, `widget/submission/`, `widget/club/`
@@ -88,6 +88,7 @@
 | **Parallel route `@modal`** | modal ↔ URL·뒤로가기 연동 |
 | **quiz store SSR 패턴 통일** | `skipHydration` + `rehydrate` (§8-6) — league store 제거 후 **선택·우선순위 낮음** |
 | ~~**barrel import 정리**~~ ✅ | `app/` → `@/widget/{home,submission,route-state,not-found}` — 루트 `widget/index.ts` 제거 |
+| ~~**shared client/server barrel**~~ ✅ | `@/shared`에서 `api/server` 제거 · `server-only` 가드 |
 | **리그 many 시** | modal 리스트 가상화 (§10) |
 | **Route Handler BFF** | RTDB 트래픽·비용·동시 사용자 급증 시 id 목록 등 **부분** 도입 검토 (현재 보류) |
 | **functions 리그 동기화** | `functions/src` 리그 목록 동기화 TODO |
@@ -138,7 +139,7 @@ src/shared/api/server/             ← 서버 fetch (next.revalidate + tags)
 src/shared/config/rtdbConfig.ts    ← RTDB base URL·headers
 src/widget/club/ClubViewsContent.tsx   ← 팀 그리드 skeleton
 src/widget/club/ui/ClubViewsError.tsx  ← 팀 fetch 인라인 retry
-src/widget/submission/ui/SubmissionCard.tsx ← 선수 사진 skeleton
+src/widget/submission/ui/SubmissionCard.tsx ← 선수 사진 skeleton · SearchForm next/dynamic
 src/widget/club/ui/ClubWithSquadModal.tsx   ← ClubSquadModal next/dynamic + hover prefetch
 src/widget/route-state/            ← LoadingView, ErrorView (전역 loading/error)
 next.config.ts                     ← images.remotePatterns (media.api-sports.io)
@@ -165,7 +166,8 @@ scripts/compare-next-image-lighthouse.mjs  ← img vs next/image Lighthouse 비�
 [x] next/image + remotePatterns (LeagueSelectItem, Club, SubmissionCard, HintUI, AutoSearchList)
 [x] submission 로딩 — in-component skeleton (segment loading.tsx 없음)
 [x] submission 오류 — 전역 error.tsx + ClubViewsError/SubmissionLoader 인라인 retry
-[x] Suspense — ClubSquadModal next/dynamic (useQuery+skeleton 유지)
+[x] Suspense — ClubSquadModal·SearchForm next/dynamic (useQuery+skeleton 유지)
+[x] shared client barrel — api/server 제거 · server-only
 [x] submission cold visit — skeleton + persist (server prefetch·segment loading 미도입)
 [x] submission generateMetadata — 리그명 title.template
 [x] app/ widget barrel — 슬라이스 직접 import (`@/widget/home` 등)

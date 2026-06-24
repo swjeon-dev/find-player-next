@@ -11,15 +11,15 @@
 - **이전 (GitHub Pages, Vite SPA):** [swjeon-dev.github.io/find-player-game](https://swjeon-dev.github.io/find-player-game/)
 - [시연 영상](https://github.com/user-attachments/assets/37036cd6-3ea5-42fa-837c-c987919557b6)
 
-[![Quiz Demo Thumbnail](src/assets/imgs/auto-complete.webp)](https://github.com/user-attachments/assets/37036cd6-3ea5-42fa-837c-c987919557b6)
 
 ## 기술 포인트
 
 - **외부 API Rate Limit** — 클라이언트 직접 호출 대신 Firebase(Cloud Functions + Realtime Database)로 조회
-- **id 기반 DB + prefix 검색 제약** — **커버·리그 모달·hover prefetch**로 조회·화면 흐름을 바꿔 체감 대기 완화 (Lighthouse 홈 LCP **24.5s → 3.2s**, TBT **690ms → 0ms**, [상세](docs/portfolio.md#perf-compare))
+- **id 기반 DB + prefix 검색 제약** — **커버·리그 모달·hover prefetch**로 조회·화면 흐름을 바꿔 체감 대기 완화 (Vite 리팩터링 기준 LCP **24.5s → 3.2s**, [상세](docs/portfolio.md#perf-compare))
 - **React Query** — 캐싱·persist, 리그·팀 hover 시 미리 조회
-- **입력·화면** — prefix 자동완성, route lazy loading, 오답 힌트 / 정답 시 UI 전환
-- **코드 구조** — `components/`, `hooks/` 등 역할별 폴더를 **FSD 기준 리팩터링** (`pages` → `widget` → `entities`, `features`는 규모상 미도입)
+- **Next App Router** — RSC는 홈 리그 fetch·`proxy.ts` 가드·Server Action 등 **요청 경계만**; 퀴즈·검색은 client(RQ·Zustand). `next/dynamic`으로 `ClubSquadModal`·`SearchForm` 청크 분리
+- **입력·화면** — prefix 자동완성, 오답 힌트 / 정답 시 UI 전환
+- **코드 구조** — **FSD** (`app/` 라우트 → `widget` → `entities` → `shared`, `features`는 규모상 미도입). 상세 — [portfolio.md](docs/portfolio.md)
 
 ## 주요 기능
 
