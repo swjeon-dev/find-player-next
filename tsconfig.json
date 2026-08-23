@@ -23,12 +23,10 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "ignoreDeprecations": "5.0",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@common": ["common"],
-      "@common/*": ["common/*"]
+      "@/*": ["./src/*"],
+      "@common": ["./common"],
+      "@common/*": ["./common/*"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "noEmit": true,
