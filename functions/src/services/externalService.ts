@@ -8,6 +8,7 @@ import type {
   IResponse,
 } from '../types/api-external.types'
 import { sleep } from '../utils/timer'
+import { DEFAULT_API_PARAMS } from '@common/config'
 
 // fetchSquadData 요청 실패시 1회 재요청
 export const fetchSquadDataWithRetry = async (
@@ -52,6 +53,24 @@ export const fetchSquadData = async (
 interface IFetchLeague {
   league: number
   season: number
+}
+
+export const fetchLeaguesInfo = async (): Promise<IResponse[]> => {
+  const params = new URLSearchParams({
+    season: DEFAULT_API_PARAMS.season.toString(),
+  })
+  const url = `${FOOTBAL_API_ENDPOINT.LEAGUES_INFO}?${params.toString()}`
+
+  try {
+    const response = await footballApiInstance.get(url)
+    if (!response.data?.response?.length)
+      throw new Error('리그 목록을 가져오지 못했습니다.')
+
+    return response.data?.response
+  } catch (error) {
+    fetchErrorLogger(error, 'externalService - fetchLeaguesInfo')
+    return []
+  }
 }
 
 // 리그 내 팀 정보 가져오기
