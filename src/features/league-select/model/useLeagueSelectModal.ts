@@ -3,7 +3,7 @@
 import { unstable_rethrow } from 'next/navigation'
 import { useRef, useTransition } from 'react'
 
-import { selectLeagueAction } from '@/entities/league/actions/selectLeagueAction'
+import { selectLeagueAction } from '../actions/selectLeagueAction'
 import { showNotificationReason } from '@/shared'
 import type { ILeagueInfo } from '@common/model'
 

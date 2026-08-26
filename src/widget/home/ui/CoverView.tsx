@@ -1,4 +1,4 @@
-import { LeagueSelectModal } from '@/entities/league'
+import { LeagueSelectModal } from '@/features/league-select'
 
 import styles from './CoverView.module.css'
 import type { ILeagueInfo } from '@common/model'
