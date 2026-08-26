@@ -4,8 +4,9 @@ import clsx from 'clsx'
 import type { IFirebaseTeamDetail } from '@common/model'
 import { SkeletonBase } from '@/shared'
 
+import { ClubWithSquadModal } from '@/features/squad-select'
+
 import styles from './ClubViews.module.css'
-import ClubWithSquadModal from './ClubWithSquadModal'
 
 interface IClubViewsContentProps {
   showTabletToggle: boolean

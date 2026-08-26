@@ -1,7 +1,7 @@
 'use client'
 
-import { useClubTabletPanel } from '@/entities/club'
 import { useFetchingTeamsDataInLeague } from '@/entities/league'
+import { useClubTabletPanel } from './model'
 
 import ClubViewsError from './ui/ClubViewsError'
 import ClubViewsContent from './ui/ClubViewsContent'

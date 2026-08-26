@@ -3,11 +3,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { memo, useEffect, useRef } from 'react'
 
-import {
-  Club,
-  prefetchTeamPlayersId,
-  useClubSquadModalTrigger,
-} from '@/entities/club'
+import { Club, prefetchTeamPlayersId } from '@/entities/club'
+import { useClubSquadModalTrigger } from '../model'
 import type { IFirebaseTeamDetail } from '@common/model'
 import dynamic from 'next/dynamic'
 

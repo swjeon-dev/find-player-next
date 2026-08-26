@@ -3,11 +3,8 @@
 import { memo, useRef } from 'react'
 import clsx from 'clsx'
 
-import {
-  useFetchingTeamPlayersData,
-  useModalPosition,
-  useSelectPlayer,
-} from '@/entities/club'
+import { useFetchingTeamPlayersData } from '@/entities/club'
+import { useModalPosition, useSelectPlayer } from '../model'
 import styles from './ClubSquadModal.module.css'
 
 function Message({ message }: { message: string }) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useLayoutEffect, useState } from 'react'
 
-import { useInputStore } from '@/entities/search'
+import { useInputStore } from '@/features/search'
 
 export const useSelectPlayer = (cb: () => void) => {
   const setValue = useInputStore(state => state.setValue)
