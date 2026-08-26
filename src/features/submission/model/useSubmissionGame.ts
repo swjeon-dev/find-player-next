@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { useInputStore } from '@/entities/search'
+import { useInputStore } from '@/features/search'
 import type { IHint } from '@/shared'
 
 interface IUseSubmissionGameProps {

@@ -1,5 +1,5 @@
+import { SubmissionGameContainer } from '@/features/submission'
 import { ClubViews } from '@/widget/club'
-import SubmissionGameContainer from './SubmissionGameContainer'
 
 function SubmissionView({ leagueId }: { leagueId: number }) {
   return (
