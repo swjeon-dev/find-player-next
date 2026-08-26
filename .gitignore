@@ -15,6 +15,7 @@ next-env.d.ts
 /dist
 dist/stats.html
 .lighthouseci
+/_archive
 
 # testing
 /coverage
