@@ -16,6 +16,22 @@ Vite SPA를 **Next.js App Router**로 옮기며, 외부 API 제약 속에서도 
 - **검색 UX** — 한 페이지에서 조회·처리를 모두 하던 구조를 홈 / 퀴즈로 나누고, 리그 선택 시 prefetch로 체감 대기를 줄였습니다. (Lighthouse 홈 LCP 24.5s → 3.2s — Vite 구조 변경 기준)
 - **이미지** — `/submission` LCP 선수 사진을 `next/image`로 리사이즈·WebP. (`remotePatterns`: `media.api-sports.io`)
 
+## 설계도
+
+퀴즈 중에는 Football API를 치지 않습니다. 키·쿼터는 Functions에 두고, 화면은 RTDB만 읽습니다.
+
+```mermaid
+flowchart LR
+  Football[Football API] -->|적재| Functions[Cloud Functions]
+  Functions -->|쓰기| RTDB[Realtime Database]
+  Browser[Browser] -->|읽기만| RTDB
+```
+
+| 누가 | 무엇을 |
+|---|---|
+| Functions | Football API → RTDB에 적재 |
+| Browser | RTDB만 읽음 |
+
 ## 코드 구조
 
 Vite 레포에서 나눈 FSD를 App Router에 맞춰 옮겼습니다. 루트 `app/`은 라우트·metadata, `src/`는 도메인 코드입니다.
@@ -48,9 +64,16 @@ app/ (routes) → widget/ → features/ → entities/ → shared/
 
 Next.js (App Router) · TypeScript · React Query · Zustand · CSS Modules · Firebase (Cloud Functions + Realtime Database)
 
-## 실행
+## 면접에서 나올 질문
 
-```bash
-npm install
-npm run dev
-```
+**왜 클라이언트가 Football API를 안 치나?**  
+쿼터와 키 때문입니다. Functions가 RTDB에 적재하고, 퀴즈 중에는 읽기만 합니다.
+
+**LCP 24.5s → 3.2s를 어떻게 쟀나?**  
+Vite에서 홈에 조회와 퀴즈를 같이 두던 구조를 나눈 뒤 Lighthouse 홈 LCP입니다. Next 이관 숫자가 아닙니다. Before는 GitHub Pages Vite 버전입니다.
+
+**Recoil에서 Zustand로 바꾼 이유는?**  
+서버 상태는 React Query, UI 상태는 Zustand로 나눴습니다.
+
+**`/submission`에 바로 들어가면?**  
+`proxy`가 리그 쿠키를 보고 없으면 홈으로 되돌립니다.
