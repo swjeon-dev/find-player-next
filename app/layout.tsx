@@ -1,6 +1,6 @@
 import '@/app/styles/global.css'
 
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 
 import { Providers } from '@/app/providers'
 import { Header, MainContainer } from '@/shared/ui/layout'
@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description: '리그를 선택하고 선수 퀴즈를 즐겨보세요.',
   keywords: ['Find Football Player', '축구', '선수 퀴즈'],
   authors: [{ name: 'up1' }],
+}
+
+export const viewport: Viewport = {
+  interactiveWidget: 'resizes-content',
 }
 
 export default async function RootLayout({
